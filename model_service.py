@@ -160,12 +160,17 @@ class ModelManager:
                 with open(metrics_file, 'r') as f:
                     image_metrics = json.load(f)
                 for im in image_metrics:
-                    acc = float(im.get('accuracy', 0))
-                    sens = float(im.get('sensitivity', 0))
-                    spec = float(im.get('specificity', 0))
-                    prec = float(im.get('precision', 0))
-                    f1_val = float(im.get('f1', 0))
-                    auc_val = float(im.get('auc_roc', 0))
+                    def parse_metric(val):
+                        if isinstance(val, str) and val.endswith('%'):
+                            return float(val.strip('%')) / 100.0
+                        return float(val) if val else 0.0
+                        
+                    acc = parse_metric(im.get('accuracy', 0))
+                    sens = parse_metric(im.get('sensitivity', 0))
+                    spec = parse_metric(im.get('specificity', 0))
+                    prec = parse_metric(im.get('precision', 0))
+                    f1_val = parse_metric(im.get('f1', 0))
+                    auc_val = parse_metric(im.get('auc_roc', 0))
                     
                     self.metrics.append({
                         'model': im.get('model', 'MobileNet') + ' (CV)',
