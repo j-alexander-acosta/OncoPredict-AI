@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OncoPredict AI - Detección y Evaluación de Riesgo de Cáncer Cervicouterino</title>
+    <meta name="description" content="Plataforma interactiva de Machine Learning biomédico para predicción de riesgo de cáncer cervicouterino con evaluación comparativa de 5 clasificadores.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="background-glow top-left"></div>
+    <div class="background-glow bottom-right"></div>
+
+    <header class="app-header">
+        <div class="header-container">
+            <div class="logo-area">
+                <div class="logo-badge">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="app-title">OncoPredict AI <span class="badge-tag">Biomédico</span></h1>
+                    <p class="app-subtitle">Evaluación de Riesgo de Cáncer Cervicouterino basada en Factores de Riesgo (UCI)</p>
+                </div>
+            </div>
+            <div class="header-stats">
+                <div class="stat-pill">
+                    <span class="stat-dot"></span>
+                    <span class="stat-label">Modelos Activos:</span>
+                    <span class="stat-value">5 Clasificadores</span>
+                </div>
+                <div class="stat-pill">
+                    <span class="stat-label">Dataset:</span>
+                    <span class="stat-value">858 Pacientes (UCI)</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <!-- Navegación por pestañas -->
+        <nav class="nav-tabs" role="tablist">
+            <button id="tab-btn-predict" class="tab-btn active" role="tab" aria-selected="true" onclick="switchTab('predict')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                Inferencia Clínica Individual
+            </button>
+            <button id="tab-btn-image" class="tab-btn" role="tab" aria-selected="false" onclick="switchTab('image')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                Análisis de Imagen (Citología)
+            </button>
+            <button id="tab-btn-benchmark" class="tab-btn" role="tab" aria-selected="false" onclick="switchTab('benchmark')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 20V10M12 20V4M6 20v-6"></path>
+                </svg>
+                Benchmark Comparativo de Modelos
+            </button>
+        </nav>
+
+        <!-- SECCIÓN 1: INFERENCIA CLÍNICA -->
+        <section id="view-predict" class="view-panel active">
+            <!-- Selector de Modelo -->
+            <div class="panel-card model-selection-card">
+                <div class="card-header">
+                    <div class="section-badge">Paso 1</div>
+                    <h2 class="card-title">Selecciona el Modelo de Aprendizaje</h2>
+                    <p class="card-description">Elige el algoritmo con el cual deseas realizar el análisis de riesgo para la paciente.</p>
+                </div>
+                <div class="models-grid" id="models-selector-grid">
+                    <div class="model-card active" data-model="Random Forest" onclick="selectModel('Random Forest')">
+                        <div class="model-radio"><span class="radio-inner"></span></div>
+                        <div class="model-info">
+                            <span class="model-name">Random Forest</span>
+                            <span class="model-type">Ensemble (Bagging)</span>
+                        </div>
+                        <div class="model-metric-badge best">
+                            <span class="metric-tag">AUC-ROC</span>
+                            <span class="metric-num">0.7645</span>
+                        </div>
+                    </div>
+
+                    <div class="model-card" data-model="XGBoost" onclick="selectModel('XGBoost')">
+                        <div class="model-radio"><span class="radio-inner"></span></div>
+                        <div class="model-info">
+                            <span class="model-name">XGBoost</span>
+                            <span class="model-type">Gradient Boosting</span>
+                        </div>
+                        <div class="model-metric-badge">
+                            <span class="metric-tag">AUC-ROC</span>
+                            <span class="metric-num">0.7541</span>
+                        </div>
+                    </div>
+
+                    <div class="model-card" data-model="Decision Tree" onclick="selectModel('Decision Tree')">
+                        <div class="model-radio"><span class="radio-inner"></span></div>
+                        <div class="model-info">
+                            <span class="model-name">Decision Tree</span>
+                            <span class="model-type">Árbol Cart</span>
+                        </div>
+                        <div class="model-metric-badge">
+                            <span class="metric-tag">Sensibilidad</span>
+                            <span class="metric-num">0.2500</span>
+                        </div>
+                    </div>
+
+                    <div class="model-card" data-model="SVM" onclick="selectModel('SVM')">
+                        <div class="model-radio"><span class="radio-inner"></span></div>
+                        <div class="model-info">
+                            <span class="model-name">SVM (RBF)</span>
+                            <span class="model-type">Support Vector Machine</span>
+                        </div>
+                        <div class="model-metric-badge">
+                            <span class="metric-tag">AUC-ROC</span>
+                            <span class="metric-num">0.6560</span>
+                        </div>
+                    </div>
+
+                    <div class="model-card" data-model="Regresión Logística" onclick="selectModel('Regresión Logística')">
+                        <div class="model-radio"><span class="radio-inner"></span></div>
+                        <div class="model-info">
+                            <span class="model-name">Regresión Logística</span>
+                            <span class="model-type">Lineal Regularizado</span>
+                        </div>
+                        <div class="model-metric-badge">
+                            <span class="metric-tag">AUC-ROC</span>
+                            <span class="metric-num">0.5093</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Presets / Casos de Prueba -->
+            <div class="presets-bar">
+                <span class="presets-title">Carga Rápida de Casos Clínicos:</span>
+                <div class="preset-buttons">
+                    <button class="preset-btn safe" onclick="loadPreset('low_risk')" id="btn-preset-low">
+                        <span class="preset-icon">✓</span> Paciente Bajo Riesgo
+                    </button>
+                    <button class="preset-btn warning" onclick="loadPreset('moderate_risk')" id="btn-preset-mod">
+                        <span class="preset-icon">⚠</span> Riesgo Moderado
+                    </button>
+                    <button class="preset-btn danger" onclick="loadPreset('high_risk')" id="btn-preset-high">
+                        <span class="preset-icon">⚡</span> Paciente Alto Riesgo
+                    </button>
+                    <button class="preset-btn outline" onclick="resetForm()" id="btn-preset-reset">
+                        <span class="preset-icon">↺</span> Limpiar Formulario
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contenedor de Formulario y Resultados -->
+            <div class="clinical-workspace-grid">
+                <!-- Columna Izquierda: Formulario de Factores Clínicos -->
+                <div class="panel-card form-card">
+                    <div class="card-header">
+                        <div class="section-badge">Paso 2</div>
+                        <h2 class="card-title">Datos de Entrada de la Paciente</h2>
+                        <p class="card-description">Completa los factores de riesgo sociodemográficos, hábitos y antecedentes ginecológicos.</p>
+                    </div>
+
+                    <form id="patient-form" onsubmit="event.preventDefault(); runPrediction();">
+                        <!-- Categoría: Demográficos y Reproductivos -->
+                        <div class="form-section">
+                            <h3 class="section-heading">
+                                <span class="heading-icon">👤</span> Demográficos y Reproductivos
+                            </h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="input-Age">Edad (Años)</label>
+                                    <input type="number" id="input-Age" name="Age" min="13" max="85" value="28" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="input-Partners">Parejas Sexuales</label>
+                                    <input type="number" id="input-Partners" name="Number of sexual partners" min="1" max="30" value="2">
+                                </div>
+                                <div class="form-group">
+                                    <label for="input-FirstSex">Edad Primer Coito</label>
+                                    <input type="number" id="input-FirstSex" name="First sexual intercourse" min="10" max="40" value="17">
+                                </div>
+                                <div class="form-group">
+                                    <label for="input-Pregnancies">N° de Embarazos</label>
+                                    <input type="number" id="input-Pregnancies" name="Num of pregnancies" min="0" max="15" value="1">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Categoría: Tabaquismo -->
+                        <div class="form-section">
+                            <h3 class="section-heading">
+                                <span class="heading-icon">🚬</span> Hábitos de Tabaquismo
+                            </h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="input-Smokes">¿Fuma actualmente?</label>
+                                    <select id="input-Smokes" name="Smokes" onchange="toggleSmokingInputs()">
+                                        <option value="0" selected>No</option>
+                                        <option value="1">Sí</option>
+                                    </select>
+                                </div>
+                                <div class="form-group smoking-dep">
+                                    <label for="input-SmokesYears">Años Fumando</label>
+                                    <input type="number" id="input-SmokesYears" name="Smokes (years)" min="0" max="50" step="0.5" value="0">
+                                </div>
+                                <div class="form-group smoking-dep">
+                                    <label for="input-SmokesPacks">Cajetillas / Año</label>
+                                    <input type="number" id="input-SmokesPacks" name="Smokes (packs/year)" min="0" max="50" step="0.1" value="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Categoría: Anticoncepción -->
+                        <div class="form-section">
+                            <h3 class="section-heading">
+                                <span class="heading-icon">💊</span> Métodos Anticonceptivos
+                            </h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="input-Hormonal">Anticonceptivos Hormonales</label>
+                                    <select id="input-Hormonal" name="Hormonal Contraceptives">
+                                        <option value="0">No</option>
+                                        <option value="1" selected>Sí</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="input-HormonalYears">Años de Uso</label>
+                                    <input type="number" id="input-HormonalYears" name="Hormonal Contraceptives (years)" min="0" max="30" step="0.5" value="2">
+                                </div>
+                                <div class="form-group">
+                                    <label for="input-IUD">Uso de DIU</label>
+                                    <select id="input-IUD" name="IUD">
+                                        <option value="0" selected>No</option>
+                                        <option value="1">Sí</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="input-IUDYears">Años con DIU</label>
+                                    <input type="number" id="input-IUDYears" name="IUD (years)" min="0" max="30" step="0.5" value="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Categoría: Historial de ITS -->
+                        <div class="form-section">
+                            <h3 class="section-heading">
+                                <span class="heading-icon">🦠</span> Infecciones de Transmisión Sexual (ITS)
+                            </h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="input-STDs">Antecedente de ITS general</label>
+                                    <select id="input-STDs" name="STDs">
+                                        <option value="0" selected>No</option>
+                                        <option value="1">Sí</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="input-STDsNumber">Número de ITS</label>
+                                    <input type="number" id="input-STDsNumber" name="STDs (number)" min="0" max="10" value="0">
+                                </div>
+                                <div class="form-group">
+                                    <label for="input-Condy">Condilomatosis</label>
+                                    <select id="input-Condy" name="STDs:condylomatosis">
+                                        <option value="0" selected>No</option>
+                                        <option value="1">Sí</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="input-HPV">VPH (HPV)</label>
+                                    <select id="input-HPV" name="STDs:HPV">
+                                        <option value="0" selected>No</option>
+                                        <option value="1">Sí</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row secondary-stds">
+                                <div class="form-group">
+                                    <label for="input-Syphilis">Sífilis</label>
+                                    <select id="input-Syphilis" name="STDs:syphilis">
+                                        <option value="0" selected>No</option>
+                                        <option value="1">Sí</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="input-HIV">VIH (HIV)</label>
+                                    <select id="input-HIV" name="STDs:HIV">
+                                        <option value="0" selected>No</option>
+                                        <option value="1">Sí</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="input-PID">Enfermedad Pélvica Inflamatoria</label>
+                                    <select id="input-PID" name="STDs:pelvic inflammatory disease">
+                                        <option value="0" selected>No</option>
+                                        <option value="1">Sí</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Categoría: Diagnósticos Médicos Previos -->
+                        <div class="form-section">
+                            <h3 class="section-heading">
+                                <span class="heading-icon">📋</span> Diagnósticos Médicos Previos
+                            </h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="input-DxCancer">Diagnóstico Prev. de Cáncer</label>
+                                    <select id="input-DxCancer" name="Dx:Cancer">
+                                        <option value="0" selected>No</option>
+                                        <option value="1">Sí</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="input-DxCIN">Diagnóstico de CIN</label>
+                                    <select id="input-DxCIN" name="Dx:CIN">
+                                        <option value="0" selected>No</option>
+                                        <option value="1">Sí</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="input-DxHPV">Diagnóstico Prev. de VPH</label>
+                                    <select id="input-DxHPV" name="Dx:HPV">
+                                        <option value="0" selected>No</option>
+                                        <option value="1">Sí</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="input-Dx">Diagnóstico General (Dx)</label>
+                                    <select id="input-Dx" name="Dx">
+                                        <option value="0" selected>No</option>
+                                        <option value="1">Sí</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-submit-container">
+                            <button type="button" class="btn-execute" id="btn-submit-prediction" onclick="runPrediction()">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                </svg>
+                                <span id="btn-submit-text">Ejecutar Análisis de Riesgo</span>
+                            </button>
+                            <div id="inline-status-msg" class="inline-status hidden">
+                                <div class="inline-status-text">
+                                    <span id="inline-status-icon">✓</span>
+                                    <span id="inline-status-title">Análisis completado:</span>
+                                    <span id="inline-status-desc" class="inline-status-badge">Riesgo Bajo</span>
+                                    <span id="inline-status-prob" style="font-weight: 700;">(2.0%)</span>
+                                </div>
+                                <span class="inline-scroll-link" onclick="scrollToResults()">Ver Panel Completo ➔</span>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Columna Derecha: Panel de Resultados de Inferencia -->
+                <div class="results-column">
+                    <div class="panel-card results-card" id="results-card">
+                        <div class="card-header">
+                            <div class="section-badge result-badge">Resultado</div>
+                            <h2 class="card-title">Dictamen Predictivo</h2>
+                            <span class="active-model-tag" id="display-selected-model">Random Forest</span>
+                        </div>
+
+                        <!-- Estado Inicial / Placeholder -->
+                        <div id="results-placeholder" class="results-placeholder">
+                            <div class="pulse-circle">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <path d="M12 6v6l4 2"></path>
+                                </svg>
+                            </div>
+                            <h3>Esperando Parámetros</h3>
+                            <p>Configura las variables de la paciente y presiona <strong>"Ejecutar Análisis de Riesgo"</strong> o selecciona un caso predefinido.</p>
+                        </div>
+
+                        <!-- Contenido Activo de Resultados -->
+                        <div id="results-content" class="results-content hidden">
+                            <!-- Gauge de Riesgo -->
+                            <div class="gauge-container">
+                                <div class="gauge-circle" id="gauge-circle">
+                                    <svg viewBox="0 0 120 120" class="gauge-svg">
+                                        <circle class="gauge-bg" cx="60" cy="60" r="50"></circle>
+                                        <circle class="gauge-fill" id="gauge-bar" cx="60" cy="60" r="50" stroke-dasharray="314" stroke-dashoffset="314"></circle>
+                                    </svg>
+                                    <div class="gauge-text">
+                                        <span class="gauge-percentage" id="display-probability">0%</span>
+                                        <span class="gauge-label">Probabilidad</span>
+                                    </div>
+                                </div>
+
+                                <div class="risk-verdict-box" id="risk-verdict-box">
+                                    <span class="verdict-tag" id="display-risk-badge">BAJO RIESGO</span>
+                                    <h3 class="verdict-title" id="display-prediction-title">Biopsia Negativa Probable</h3>
+                                    <p class="verdict-desc" id="display-clinical-advice">Baja probabilidad de lesión maligna.</p>
+                                </div>
+                            </div>
+
+                            <!-- Comparativa de Consenso de los 5 Modelos -->
+                            <div class="consensus-section">
+                                <h4 class="consensus-title">
+                                    <span>Consenso de los 5 Clasificadores</span>
+                                </h4>
+                                <div class="consensus-grid" id="consensus-grid">
+                                    <!-- Generado por JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Nota Científica / Explicabilidad -->
+                    <div class="panel-card info-card">
+                        <div class="info-header">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                            </svg>
+                            <span>Garantía de Rigor Metodológico</span>
+                        </div>
+                        <p class="info-text">
+                            La imputación y estandarización se aplican con parámetros ajustados en el entrenamiento. SMOTE opera únicamente en el conjunto de aprendizaje para preservar la distribución epidemiológica natural y prevenir fuga de datos.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN 2: BENCHMARK COMPARATIVO -->
+        <section id="view-benchmark" class="view-panel">
+            <div class="panel-card benchmark-card">
+                <div class="card-header">
+                    <div class="section-badge">Validación Clínica</div>
+                    <h2 class="card-title">Métricas de Evaluación en Conjunto de Prueba (15% Estratificado)</h2>
+                    <p class="card-description">
+                        Evaluación rigurosa sobre 129 casos de prueba (121 negativos, 8 positivos) sin fuga de información (*leakage-free*).
+                    </p>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="benchmark-table" id="benchmark-table">
+                        <thead>
+                            <tr>
+                                <th>Algoritmo</th>
+                                <th>Dataset</th>
+                                <th>Accuracy</th>
+                                <th>Sensibilidad (Recall)</th>
+                                <th>Especificidad</th>
+                                <th>Precisión</th>
+                                <th>F1-Score</th>
+                                <th>AUC-ROC</th>
+                                <th>Matriz (TP / FP / TN / FN)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="benchmark-table-body">
+                            {% for m in metrics %}
+                            <tr class="{% if m.model == 'Random Forest' or m.model == 'XGBoost' %}highlight-row{% endif %}">
+                                <td class="model-cell">
+                                    <div class="cell-model-name">{{ m.model }}</div>
+                                </td>
+                                <td>
+                                    {{ m.dataset }}
+                                </td>
+                                <td>
+                                    <strong>{{ m.accuracy_pct }}</strong>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);">{{ "%.4f"|format(m.accuracy) }}</div>
+                                </td>
+                                <td>
+                                    <span class="metric-highlight {% if m.sensitivity >= 0.20 %}best-val{% endif %}">
+                                        <strong>{{ m.sensitivity_pct }}</strong>
+                                    </span>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);">{{ "%.4f"|format(m.sensitivity) }}</div>
+                                </td>
+                                <td>
+                                    <span class="metric-highlight {% if m.specificity >= 0.98 %}best-val{% endif %}">
+                                        <strong>{{ m.specificity_pct }}</strong>
+                                    </span>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);">{{ "%.4f"|format(m.specificity) }}</div>
+                                </td>
+                                <td>
+                                    <strong>{{ m.precision_pct }}</strong>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);">{{ "%.4f"|format(m.precision) }}</div>
+                                </td>
+                                <td>
+                                    <strong>{{ m.f1_pct }}</strong>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);">{{ "%.4f"|format(m.f1) }}</div>
+                                </td>
+                                <td>
+                                    <span class="metric-pill {% if m.auc_roc >= 0.75 %}top-auc{% endif %}">
+                                        <strong>{{ m.auc_roc_pct }}</strong>
+                                    </span>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);">{{ "%.4f"|format(m.auc_roc) }}</div>
+                                </td>
+                                <td class="matrix-cell">
+                                    <span class="tp-tag">TP: {{ m.tp }}</span>
+                                    <span class="fp-tag">FP: {{ m.fp }}</span>
+                                    <span class="tn-tag">TN: {{ m.tn }}</span>
+                                    <span class="fn-tag">FN: {{ m.fn }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="benchmark-insights">
+                    <div class="insight-item">
+                        <div class="insight-icon">🏆</div>
+                        <div class="insight-body">
+                            <h4>Mayor Capacidad Discriminativa Global</h4>
+                            <p><strong>Random Forest (AUC-ROC: 0.7645)</strong> y <strong>XGBoost (AUC-ROC: 0.7541)</strong> capturan de manera sobresaliente las relaciones no lineales entre factores de riesgo y el resultado de la biopsia.</p>
+                        </div>
+                    </div>
+                    <div class="insight-item">
+                        <div class="insight-icon">🛡️</div>
+                        <div class="insight-body">
+                            <h4>Máxima Especificidad</h4>
+                            <p><strong>XGBoost (99.17%)</strong> minimiza significativamente las alarmas innecesarias o falsos positivos en el conjunto de prueba (solo 1 FP en 121 pacientes sanas).</p>
+                        </div>
+                    </div>
+                    <div class="insight-item">
+                        <div class="insight-icon">🩺</div>
+                        <div class="insight-body">
+                            <h4>Consideración Clínica de Cribado</h4>
+                            <p>Para aplicaciones de tamizaje masivo, el umbral de probabilidad puede ajustarse hacia la izquierda para favorecer la Sensibilidad clínica y reducir los Falsos Negativos.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- SECCIÓN 3: ANÁLISIS DE IMAGEN (CITOLOGÍA) -->
+    <section id="view-image" class="view-panel" style="display: none;">
+        <div class="clinical-workspace-grid">
+            <div class="panel-card form-card">
+                <div class="card-header">
+                    <div class="section-badge">Visión por Computadora</div>
+                    <h2 class="card-title">Análisis de Citología (Dataset Herlev)</h2>
+                    <p class="card-description">Sube una imagen citológica para que la Red Neuronal detecte la presencia de células anormales.</p>
+                </div>
+                
+                <div class="form-section">
+                    <h3 class="section-heading">Selección de Modelo CNN</h3>
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <select id="image-model-selector" class="form-control">
+                            <option value="MobileNet" selected>MobileNet</option>
+                            <option value="InceptionV3">InceptionV3</option>
+                            <option value="ResNet50">ResNet50</option>
+                        </select>
+                    </div>
+                    
+                    <h3 class="section-heading">Subir Imagen</h3>
+                    <div class="image-upload-area" id="image-upload-area">
+                        <input type="file" id="image-input" accept="image/jpeg, image/png" style="display: none;">
+                        <label for="image-input" class="upload-label">
+                            <div class="upload-icon">📁</div>
+                            <span>Haz clic para subir o arrastra la imagen aquí</span>
+                            <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-top: 5px;">Formatos soportados: JPG, PNG</span>
+                        </label>
+                        <div id="image-preview-container" class="hidden" style="margin-top: 15px; text-align: center;">
+                            <img id="image-preview" src="" alt="Preview" style="max-width: 100%; max-height: 250px; border-radius: 8px; border: 1px solid var(--border-color);">
+                            <button class="preset-btn outline" onclick="clearImageSelection()" style="margin-top: 10px;">Cambiar Imagen</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-submit-container">
+                    <button type="button" class="btn-execute" id="btn-submit-image" onclick="runImagePrediction()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                        <span id="btn-submit-image-text">Analizar Imagen</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="results-column">
+                <div class="panel-card results-card" id="image-results-card">
+                    <div class="card-header">
+                        <div class="section-badge result-badge">Resultado CV</div>
+                        <h2 class="card-title">Dictamen Citológico</h2>
+                        <span class="active-model-tag" id="display-img-model">MobileNet</span>
+                    </div>
+
+                    <div id="image-results-placeholder" class="results-placeholder">
+                        <div class="pulse-circle">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                <polyline points="21 15 16 10 5 21"></polyline>
+                            </svg>
+                        </div>
+                        <h3>Esperando Imagen</h3>
+                        <p>Sube una imagen celular y presiona <strong>"Analizar Imagen"</strong>.</p>
+                    </div>
+
+                    <div id="image-results-content" class="results-content hidden">
+                        <div class="gauge-container">
+                            <div class="gauge-circle" id="img-gauge-circle">
+                                <svg viewBox="0 0 120 120" class="gauge-svg">
+                                    <circle class="gauge-bg" cx="60" cy="60" r="50"></circle>
+                                    <circle class="gauge-fill" id="img-gauge-bar" cx="60" cy="60" r="50" stroke-dasharray="314" stroke-dashoffset="314"></circle>
+                                </svg>
+                                <div class="gauge-text">
+                                    <span class="gauge-percentage" id="display-img-probability">0%</span>
+                                    <span class="gauge-label">Confianza</span>
+                                </div>
+                            </div>
+                            
+                            <div class="risk-verdict-box" id="img-risk-verdict-box">
+                                <span class="verdict-tag" id="display-img-risk-badge">BAJO RIESGO</span>
+                                <h3 class="verdict-title" id="display-img-prediction-title">Clase Detectada</h3>
+                                <p class="verdict-desc" id="display-img-clinical-advice">Recomendación Clínica</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="app-footer">
+        <p>OncoPredict AI &bull; Proyecto de Investigación Biomédica &bull; Basado en el repositorio UCI Machine Learning</p>
+    </footer>
+
+    <script src="/static/js/main.js"></script>
+</body>
+</html>

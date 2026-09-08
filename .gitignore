@@ -1,0 +1,21 @@
+# Entornos Virtuales
+.venv/
+venv/
+env/
+
+# Si deseas ignorar toda la carpeta Media descomenta la siguiente línea:
+Media/
+
+# Caché de Python
+__pycache__/
+*.pyc
+
+# Archivos del sistema
+.DS_Store
+
+# Archivos temporales de Office
+~$*
+
+# Modelos pesados
+*.keras
+*.h5

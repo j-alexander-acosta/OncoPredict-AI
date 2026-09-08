@@ -1,0 +1,92 @@
+[
+    {
+        "dataset": "Herlev",
+        "model": "MobileNet",
+        "accuracy": "43.80%",
+        "sensitivity": "47.78%",
+        "specificity": "90.16%",
+        "precision": "52.90%",
+        "f1": "46.68%",
+        "auc_roc": "81.42%"
+    },
+    {
+        "dataset": "Herlev",
+        "model": "InceptionV3",
+        "accuracy": "44.53%",
+        "sensitivity": "46.42%",
+        "specificity": "90.35%",
+        "precision": "47.76%",
+        "f1": "45.72%",
+        "auc_roc": "79.36%"
+    },
+    {
+        "dataset": "Herlev",
+        "model": "ResNet50",
+        "accuracy": "21.53%",
+        "sensitivity": "14.29%",
+        "specificity": "85.71%",
+        "precision": "3.08%",
+        "f1": "5.06%",
+        "auc_roc": "55.57%"
+    },
+    {
+        "dataset": "SIPaKMeD",
+        "model": "MobileNet",
+        "accuracy": "50.85%",
+        "sensitivity": "50.75%",
+        "specificity": "87.59%",
+        "precision": "60.61%",
+        "f1": "50.93%",
+        "auc_roc": "77.90%"
+    },
+    {
+        "dataset": "SIPaKMeD",
+        "model": "InceptionV3",
+        "accuracy": "42.76%",
+        "sensitivity": "42.44%",
+        "specificity": "85.52%",
+        "precision": "56.24%",
+        "f1": "43.18%",
+        "auc_roc": "75.07%"
+    },
+    {
+        "dataset": "SIPaKMeD",
+        "model": "ResNet50",
+        "accuracy": "21.58%",
+        "sensitivity": "20.38%",
+        "specificity": "80.12%",
+        "precision": "7.75%",
+        "f1": "10.20%",
+        "auc_roc": "61.77%"
+    },
+    {
+        "dataset": "RIVA",
+        "model": "MobileNet",
+        "accuracy": "54.35%",
+        "sensitivity": "53.86%",
+        "specificity": "88.44%",
+        "precision": "69.08%",
+        "f1": "54.55%",
+        "auc_roc": "77.83%"
+    },
+    {
+        "dataset": "RIVA",
+        "model": "InceptionV3",
+        "accuracy": "47.15%",
+        "sensitivity": "46.75%",
+        "specificity": "86.65%",
+        "precision": "59.65%",
+        "f1": "45.89%",
+        "auc_roc": "76.46%"
+    },
+    {
+        "dataset": "RIVA",
+        "model": "ResNet50",
+        "accuracy": "15.88%",
+        "sensitivity": "15.09%",
+        "specificity": "78.77%",
+        "precision": "8.59%",
+        "f1": "10.25%",
+        "auc_roc": "60.37%"
+    }
+]
