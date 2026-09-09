@@ -427,18 +427,19 @@ class ModelManager:
             # Fallback for Windows/macOS differences in case sensitivity
             raise ValueError(f"El modelo {model_name} no se encuentra entrenado o disponible.")
             
-        if model_name not in self.image_models:
+        model_key = model_name.lower()
+        if model_key not in self.image_models:
             if is_pytorch:
                 pt_model = torch.hub.load('pytorch/vision:v0.6.0', 'alexnet', pretrained=False)
                 pt_model.classifier[4] = nn.Linear(4096, 1024)
                 pt_model.classifier[6] = nn.Linear(1024, 7)
                 pt_model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
                 pt_model.eval()
-                self.image_models[model_name] = pt_model
+                self.image_models[model_key] = pt_model
             else:
-                self.image_models[model_name] = tf.keras.models.load_model(model_path)
+                self.image_models[model_key] = tf.keras.models.load_model(model_path)
             
-        img_model = self.image_models[model_name]
+        img_model = self.image_models[model_key]
         
         # Preprocesar imagen
         img = Image.open(image_stream).convert('RGB')
@@ -494,8 +495,9 @@ class ModelManager:
                 continue
                 
             try:
-                m_path = os.path.join(models_dir, f"{avail_model.lower()}_herlev.pth" if avail_is_pytorch else f"{avail_model.lower()}_herlev.keras")
-                if avail_model not in self.image_models:
+                avail_key = avail_model.lower()
+                m_path = os.path.join(models_dir, f"{avail_key}_herlev.pth" if avail_is_pytorch else f"{avail_key}_herlev.keras")
+                if avail_key not in self.image_models:
                     if avail_is_pytorch:
                         import torch
                         import torch.nn as nn
@@ -505,21 +507,21 @@ class ModelManager:
                         pt_m.classifier[6] = nn.Linear(1024, 7)
                         pt_m.load_state_dict(torch.load(m_path, map_location=torch.device('cpu')))
                         pt_m.eval()
-                        self.image_models[avail_model] = pt_m
+                        self.image_models[avail_key] = pt_m
                     else:
                         import tensorflow as tf
-                        self.image_models[avail_model] = tf.keras.models.load_model(m_path)
+                        self.image_models[avail_key] = tf.keras.models.load_model(m_path)
                 
                 if avail_is_pytorch:
                     import torch
                     import torch.nn.functional as F
                     with torch.no_grad():
-                        m_outputs = self.image_models[avail_model](img_tensor)
+                        m_outputs = self.image_models[avail_key](img_tensor)
                         m_probs = F.softmax(m_outputs, dim=1)[0]
                         m_idx = torch.argmax(m_probs).item()
                         m_prob = float(m_probs[m_idx].item())
                 else:
-                    m_preds = self.image_models[avail_model].predict(img_array)[0]
+                    m_preds = self.image_models[avail_key].predict(img_array)[0]
                     m_idx = np.argmax(m_preds)
                     m_prob = float(m_preds[m_idx])
                     
