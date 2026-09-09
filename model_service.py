@@ -408,14 +408,6 @@ class ModelManager:
         """
         is_pytorch = (model_name.lower() == 'alexnet')
         
-        if is_pytorch:
-            import torch
-            import torch.nn as nn
-            import torch.nn.functional as F
-            import torchvision.transforms as transforms
-        else:
-            import tensorflow as tf
-        
         # Validar y cargar modelo
         models_dir = os.path.join(os.path.dirname(self.dataset_path), 'models')
         
@@ -424,51 +416,56 @@ class ModelManager:
         model_path = os.path.join(models_dir, f"{actual_model_name}_herlev.pth" if is_pytorch else f"{actual_model_name}_herlev.keras")
         
         if not os.path.exists(model_path):
-            # Fallback for Windows/macOS differences in case sensitivity
             raise ValueError(f"El modelo {model_name} no se encuentra entrenado o disponible.")
             
         model_key = model_name.lower()
-        if model_key not in self.image_models:
-            if is_pytorch:
-                import torchvision.models as models
-                pt_model = models.alexnet(pretrained=False)
-                pt_model.classifier[4] = nn.Linear(4096, 1024)
-                pt_model.classifier[6] = nn.Linear(1024, 7)
-                pt_model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
-                pt_model.eval()
-                self.image_models[model_key] = pt_model
-            else:
-                self.image_models[model_key] = tf.keras.models.load_model(model_path)
-            
-        img_model = self.image_models[model_key]
-        
-        # Preprocesar imagen
-        img = Image.open(image_stream).convert('RGB')
         
         if is_pytorch:
-            # Preparación PyTorch
-            transform = transforms.Compose([
-                transforms.Resize(256),
-                transforms.CenterCrop(224),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-            ])
-            img_tensor = transform(img).unsqueeze(0)
+            import subprocess
+            import json
+            import tempfile
+            import sys
+            
+            with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tmp_img:
+                img = Image.open(image_stream).convert('RGB')
+                img.save(tmp_img.name)
+                tmp_img_path = tmp_img.name
+                
+            try:
+                cmd = [sys.executable, 'infer_pytorch.py', model_path, tmp_img_path]
+                result = subprocess.check_output(cmd, stderr=subprocess.STDOUT, text=True)
+                
+                out_lines = result.strip().split('\n')
+                res_json = None
+                for line in reversed(out_lines):
+                    try:
+                        res_json = json.loads(line)
+                        break
+                    except:
+                        pass
+                        
+                if not res_json or not res_json.get('success'):
+                    raise Exception(res_json.get('error', 'Error en PyTorch inference: ' + result))
+                    
+                predicted_class_idx = res_json['idx']
+                confidence = res_json['prob']
+            finally:
+                os.remove(tmp_img_path)
+                
         else:
+            import tensorflow as tf
+            if model_key not in self.image_models:
+                self.image_models[model_key] = tf.keras.models.load_model(model_path)
+            
+            img_model = self.image_models[model_key]
+            
             # Preparación Keras
+            img = Image.open(image_stream).convert('RGB')
             img_keras = img.resize((224, 224))
             img_array = np.array(img_keras)
             img_array = img_array.astype('float32') / 255.0
             img_array = np.expand_dims(img_array, axis=0)
-        
-        # Inferir
-        if is_pytorch:
-            with torch.no_grad():
-                outputs = img_model(img_tensor)
-                probs = F.softmax(outputs, dim=1)[0]
-                predicted_class_idx = torch.argmax(probs).item()
-                confidence = float(probs[predicted_class_idx].item())
-        else:
+            
             preds = img_model.predict(img_array)[0]
             predicted_class_idx = np.argmax(preds)
             confidence = float(preds[predicted_class_idx])
@@ -488,54 +485,31 @@ class ModelManager:
         
         # Consenso de todos los modelos disponibles (opcional)
         consensus = {}
-        for avail_model in self.get_available_image_models():
-            avail_is_pytorch = (avail_model.lower() == 'alexnet')
-            
-            # Para evitar Broken Pipe y Segfaults en macOS ARM64 (Metal), no mezclamos Keras y PyTorch en la misma inferencia.
-            if avail_is_pytorch != is_pytorch:
-                continue
-                
-            try:
-                avail_key = avail_model.lower()
-                m_path = os.path.join(models_dir, f"{avail_key}_herlev.pth" if avail_is_pytorch else f"{avail_key}_herlev.keras")
-                if avail_key not in self.image_models:
-                    if avail_is_pytorch:
-                        import torch
-                        import torch.nn as nn
-                        import torch.nn.functional as F
-                        import torchvision.models as models
-                        pt_m = models.alexnet(pretrained=False)
-                        pt_m.classifier[4] = nn.Linear(4096, 1024)
-                        pt_m.classifier[6] = nn.Linear(1024, 7)
-                        pt_m.load_state_dict(torch.load(m_path, map_location=torch.device('cpu')))
-                        pt_m.eval()
-                        self.image_models[avail_key] = pt_m
-                    else:
+        if not is_pytorch:
+            for avail_model in self.get_available_image_models():
+                avail_is_pytorch = (avail_model.lower() == 'alexnet')
+                if avail_is_pytorch:
+                    continue
+                    
+                try:
+                    avail_key = avail_model.lower()
+                    m_path = os.path.join(models_dir, f"{avail_key}_herlev.keras")
+                    if avail_key not in self.image_models:
                         import tensorflow as tf
                         self.image_models[avail_key] = tf.keras.models.load_model(m_path)
-                
-                if avail_is_pytorch:
-                    import torch
-                    import torch.nn.functional as F
-                    with torch.no_grad():
-                        m_outputs = self.image_models[avail_key](img_tensor)
-                        m_probs = F.softmax(m_outputs, dim=1)[0]
-                        m_idx = torch.argmax(m_probs).item()
-                        m_prob = float(m_probs[m_idx].item())
-                else:
+                    
                     m_preds = self.image_models[avail_key].predict(img_array)[0]
                     m_idx = np.argmax(m_preds)
                     m_prob = float(m_preds[m_idx])
                     
-                m_name, m_group = class_mapping.get(m_idx, ('Desconocido', 'Desconocido'))
-                consensus[avail_model] = {
-                    'prediction': m_group,
-                    'specific_class': m_name,
-                    'probability': round(m_prob * 100, 1),
-                    'risk_tier': 'Alto' if m_group == 'Anormal' else 'Bajo'
-                }
-            except:
-                pass
+                    c_name, c_group = class_mapping.get(m_idx, ('Desconocido', 'Desconocido'))
+                    consensus[avail_model] = {
+                        'clase': c_name,
+                        'grupo': c_group,
+                        'confianza': f"{m_prob * 100:.1f}%"
+                    }
+                except Exception as e:
+                    print(f"No se pudo incluir {avail_model} en el consenso: {e}")
         
         if group == 'Anormal':
             risk_tier = 'Alto'
