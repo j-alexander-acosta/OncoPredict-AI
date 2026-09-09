@@ -29,11 +29,18 @@ def initialize_model(num_classes, device, pretrained_path=None):
         
     return model.to(device)
 
-def train_model(model, trainloader, device, epochs=2):
+import copy
+
+def train_model(model, trainloader, valloader, device, epochs=50, patience=5):
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
-    model.train()
+    
+    best_val_loss = float('inf')
+    best_model_wts = copy.deepcopy(model.state_dict())
+    epochs_no_improve = 0
+    
     for epoch in range(epochs):
+        model.train()
         running_loss = 0.0
         for i, data in enumerate(trainloader, 0):
             inputs, labels = data[0].to(device), data[1].to(device)
@@ -44,9 +51,37 @@ def train_model(model, trainloader, device, epochs=2):
             optimizer.step()
             running_loss += loss.item()
             if i % 50 == 49:
-                print(f"[{epoch + 1}, {i + 1}] loss: {running_loss / 50:.3f}")
+                print(f"[{epoch + 1}, {i + 1}] train loss: {running_loss / 50:.3f}")
                 running_loss = 0.0
+                
+        # Validation phase
+        model.eval()
+        val_loss = 0.0
+        with torch.no_grad():
+            for data in valloader:
+                inputs, labels = data[0].to(device), data[1].to(device)
+                outputs = model(inputs)
+                loss = criterion(outputs, labels)
+                val_loss += loss.item()
+        
+        val_loss /= len(valloader)
+        print(f"Epoch {epoch + 1}/{epochs} - Val Loss: {val_loss:.4f}")
+        
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            best_model_wts = copy.deepcopy(model.state_dict())
+            epochs_no_improve = 0
+            print("Validation loss decreased, saving best model...")
+        else:
+            epochs_no_improve += 1
+            print(f"EarlyStopping patience: {epochs_no_improve}/{patience}")
+            if epochs_no_improve >= patience:
+                print("Early stopping triggered.")
+                break
+                
     print('Finished Training')
+    model.load_state_dict(best_model_wts)
+    return model
 
 def evaluate_model(model, testloader, device, num_classes):
     model.eval()
@@ -146,14 +181,10 @@ def main():
         
         pretrained_path = os.path.join(base_dir, 'models', f'alexnet_{ds_name.lower()}.pth')
         
-        if ds_name == 'Herlev' and os.path.exists(pretrained_path):
-            print("Evaluando modelo existente...")
-            model = initialize_model(num_classes, device, pretrained_path)
-        else:
-            print("Entrenando nuevo modelo...")
-            model = initialize_model(num_classes, device)
-            train_model(model, trainloader, device, epochs=2)
-            torch.save(model.state_dict(), pretrained_path)
+        print("Entrenando nuevo modelo...")
+        model = initialize_model(num_classes, device)
+        model = train_model(model, trainloader, testloader, device, epochs=50, patience=5)
+        torch.save(model.state_dict(), pretrained_path)
             
         print("Calculando métricas...")
         acc, sens, spec, prec, f1, auc = evaluate_model(model, testloader, device, num_classes)

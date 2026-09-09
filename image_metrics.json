@@ -2,121 +2,121 @@
     {
         "dataset": "Herlev",
         "model": "MobileNet",
-        "accuracy": "43.80%",
-        "sensitivity": "47.78%",
-        "specificity": "90.16%",
-        "precision": "52.90%",
-        "f1": "46.68%",
-        "auc_roc": "81.42%"
+        "accuracy": "42.70%",
+        "sensitivity": "47.86%",
+        "specificity": "90.18%",
+        "precision": "50.66%",
+        "f1": "47.76%",
+        "auc_roc": "81.66%"
     },
     {
         "dataset": "Herlev",
         "model": "InceptionV3",
-        "accuracy": "44.53%",
-        "sensitivity": "46.42%",
-        "specificity": "90.35%",
-        "precision": "47.76%",
-        "f1": "45.72%",
-        "auc_roc": "79.36%"
+        "accuracy": "40.15%",
+        "sensitivity": "43.71%",
+        "specificity": "89.61%",
+        "precision": "45.27%",
+        "f1": "43.73%",
+        "auc_roc": "79.34%"
     },
     {
         "dataset": "Herlev",
         "model": "ResNet50",
-        "accuracy": "21.53%",
-        "sensitivity": "14.29%",
-        "specificity": "85.71%",
-        "precision": "3.08%",
-        "f1": "5.06%",
-        "auc_roc": "55.57%"
+        "accuracy": "16.79%",
+        "sensitivity": "11.34%",
+        "specificity": "84.97%",
+        "precision": "4.31%",
+        "f1": "6.11%",
+        "auc_roc": "57.98%"
     },
     {
         "dataset": "SIPaKMeD",
         "model": "MobileNet",
-        "accuracy": "50.85%",
-        "sensitivity": "50.75%",
-        "specificity": "87.59%",
-        "precision": "60.61%",
-        "f1": "50.93%",
-        "auc_roc": "77.90%"
+        "accuracy": "49.35%",
+        "sensitivity": "49.42%",
+        "specificity": "87.19%",
+        "precision": "66.98%",
+        "f1": "49.93%",
+        "auc_roc": "81.29%"
     },
     {
         "dataset": "SIPaKMeD",
         "model": "InceptionV3",
-        "accuracy": "42.76%",
-        "sensitivity": "42.44%",
-        "specificity": "85.52%",
-        "precision": "56.24%",
-        "f1": "43.18%",
-        "auc_roc": "75.07%"
+        "accuracy": "41.86%",
+        "sensitivity": "41.65%",
+        "specificity": "85.31%",
+        "precision": "55.46%",
+        "f1": "41.84%",
+        "auc_roc": "73.28%"
     },
     {
         "dataset": "SIPaKMeD",
         "model": "ResNet50",
-        "accuracy": "21.58%",
-        "sensitivity": "20.38%",
-        "specificity": "80.12%",
-        "precision": "7.75%",
-        "f1": "10.20%",
-        "auc_roc": "61.77%"
+        "accuracy": "33.17%",
+        "sensitivity": "33.49%",
+        "specificity": "83.14%",
+        "precision": "16.62%",
+        "f1": "20.85%",
+        "auc_roc": "60.33%"
     },
     {
         "dataset": "RIVA",
         "model": "MobileNet",
-        "accuracy": "54.35%",
-        "sensitivity": "53.86%",
-        "specificity": "88.44%",
-        "precision": "69.08%",
-        "f1": "54.55%",
-        "auc_roc": "77.83%"
+        "accuracy": "47.55%",
+        "sensitivity": "47.19%",
+        "specificity": "86.72%",
+        "precision": "68.20%",
+        "f1": "47.31%",
+        "auc_roc": "76.93%"
     },
     {
         "dataset": "RIVA",
         "model": "InceptionV3",
-        "accuracy": "47.15%",
-        "sensitivity": "46.75%",
-        "specificity": "86.65%",
-        "precision": "59.65%",
-        "f1": "45.89%",
-        "auc_roc": "76.46%"
+        "accuracy": "40.66%",
+        "sensitivity": "40.79%",
+        "specificity": "85.09%",
+        "precision": "46.57%",
+        "f1": "41.15%",
+        "auc_roc": "73.82%"
     },
     {
         "dataset": "RIVA",
         "model": "ResNet50",
-        "accuracy": "15.88%",
-        "sensitivity": "15.09%",
-        "specificity": "78.77%",
-        "precision": "8.59%",
-        "f1": "10.25%",
-        "auc_roc": "60.37%"
+        "accuracy": "21.18%",
+        "sensitivity": "20.00%",
+        "specificity": "80.00%",
+        "precision": "4.24%",
+        "f1": "6.99%",
+        "auc_roc": "60.54%"
     },
     {
         "dataset": "Herlev",
         "model": "AlexNet",
-        "accuracy": "32.48%",
-        "sensitivity": "42.16%",
-        "specificity": "88.73%",
-        "precision": "43.33%",
-        "f1": "39.92%",
-        "auc_roc": "72.91%"
+        "accuracy": "45.26%",
+        "sensitivity": "45.96%",
+        "specificity": "90.30%",
+        "precision": "43.30%",
+        "f1": "42.42%",
+        "auc_roc": "80.39%"
     },
     {
         "dataset": "SIPaKMeD",
         "model": "AlexNet",
-        "accuracy": "90.84%",
-        "sensitivity": "91.19%",
-        "specificity": "97.69%",
-        "precision": "91.53%",
-        "f1": "91.04%",
-        "auc_roc": "99.21%"
+        "accuracy": "93.63%",
+        "sensitivity": "93.99%",
+        "specificity": "98.40%",
+        "precision": "93.79%",
+        "f1": "93.76%",
+        "auc_roc": "99.65%"
     },
     {
         "dataset": "RIVA",
         "model": "AlexNet",
-        "accuracy": "89.51%",
-        "sensitivity": "90.10%",
-        "specificity": "97.36%",
-        "precision": "89.61%",
-        "f1": "89.64%",
-        "auc_roc": "98.61%"
+        "accuracy": "92.83%",
+        "sensitivity": "93.20%",
+        "specificity": "98.19%",
+        "precision": "93.08%",
+        "f1": "93.13%",
+        "auc_roc": "99.47%"
     }
 ]

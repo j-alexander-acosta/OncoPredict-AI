@@ -209,7 +209,21 @@ def run_image_pipeline(dataset_dir, dataset_name, epochs=20):
         model = build_transfer_learning_model(model_class, num_classes=num_classes)
         
         # Entrenamiento
-        model.fit(train_gen, epochs=epochs, validation_data=test_gen, verbose=1)
+        from tensorflow.keras.callbacks import EarlyStopping
+        early_stopping = EarlyStopping(
+            monitor='val_loss',
+            patience=5,
+            restore_best_weights=True,
+            verbose=1
+        )
+        
+        model.fit(
+            train_gen, 
+            epochs=epochs, 
+            validation_data=test_gen, 
+            callbacks=[early_stopping],
+            verbose=1
+        )
         
         # Guardar el modelo en disco
         model_path = os.path.join(models_dir, f"{name.lower()}_{dataset_name.lower()}.keras")
@@ -246,13 +260,13 @@ def main():
     all_image_results = []
     
     print("\n--- Procesando Herlev ---")
-    all_image_results += run_image_pipeline(herlev_dir, "Herlev", epochs=5)
+    all_image_results += run_image_pipeline(herlev_dir, "Herlev", epochs=50)
     
     print("\n--- Procesando SIPaKMeD ---")
-    all_image_results += run_image_pipeline(sipakmed_dir, "SIPaKMeD", epochs=5)
+    all_image_results += run_image_pipeline(sipakmed_dir, "SIPaKMeD", epochs=50)
     
     print("\n--- Procesando RIVA ---")
-    all_image_results += run_image_pipeline(riva_dir, "RIVA", epochs=5)
+    all_image_results += run_image_pipeline(riva_dir, "RIVA", epochs=50)
     
     # Consolidar
     all_results = tabular_results + all_image_results
