@@ -430,7 +430,8 @@ class ModelManager:
         model_key = model_name.lower()
         if model_key not in self.image_models:
             if is_pytorch:
-                pt_model = torch.hub.load('pytorch/vision:v0.6.0', 'alexnet', pretrained=False)
+                import torchvision.models as models
+                pt_model = models.alexnet(pretrained=False)
                 pt_model.classifier[4] = nn.Linear(4096, 1024)
                 pt_model.classifier[6] = nn.Linear(1024, 7)
                 pt_model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
@@ -502,7 +503,8 @@ class ModelManager:
                         import torch
                         import torch.nn as nn
                         import torch.nn.functional as F
-                        pt_m = torch.hub.load('pytorch/vision:v0.6.0', 'alexnet', pretrained=False)
+                        import torchvision.models as models
+                        pt_m = models.alexnet(pretrained=False)
                         pt_m.classifier[4] = nn.Linear(4096, 1024)
                         pt_m.classifier[6] = nn.Linear(1024, 7)
                         pt_m.load_state_dict(torch.load(m_path, map_location=torch.device('cpu')))
