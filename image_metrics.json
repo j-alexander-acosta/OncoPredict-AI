@@ -88,5 +88,35 @@
         "precision": "8.59%",
         "f1": "10.25%",
         "auc_roc": "60.37%"
+    },
+    {
+        "dataset": "Herlev",
+        "model": "AlexNet",
+        "accuracy": "32.48%",
+        "sensitivity": "42.16%",
+        "specificity": "88.73%",
+        "precision": "43.33%",
+        "f1": "39.92%",
+        "auc_roc": "72.91%"
+    },
+    {
+        "dataset": "SIPaKMeD",
+        "model": "AlexNet",
+        "accuracy": "90.84%",
+        "sensitivity": "91.19%",
+        "specificity": "97.69%",
+        "precision": "91.53%",
+        "f1": "91.04%",
+        "auc_roc": "99.21%"
+    },
+    {
+        "dataset": "RIVA",
+        "model": "AlexNet",
+        "accuracy": "89.51%",
+        "sensitivity": "90.10%",
+        "specificity": "97.36%",
+        "precision": "89.61%",
+        "f1": "89.64%",
+        "auc_roc": "98.61%"
     }
 ]

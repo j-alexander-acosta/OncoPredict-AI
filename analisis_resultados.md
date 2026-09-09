@@ -17,8 +17,9 @@ A continuación presento el análisis interpretativo del rendimiento de los mode
 Los resultados revelan patrones consistentes a través de los tres datasets de citologías (Herlev, SIPaKMeD, RIVA).
 
 ### Rendimiento por Arquitectura de Red
-*   🏆 **MobileNet (El mejor desempeño):** Fue consistentemente el mejor modelo a través de todos los datasets. Su pico de rendimiento fue en **RIVA** (Accuracy: 54.35%, F1: 54.55%). Además, en el dataset **Herlev** mostró una asombrosa capacidad de discriminación latente con un **AUC-ROC del 81.42%**. 
-*   🥈 **InceptionV3:** Mantuvo resultados decentes y muy competitivos frente a MobileNet, con métricas de Accuracy rondando el 42% - 47%.
+*   🏆 **AlexNet (El nuevo campeón en SIPaKMeD y RIVA):** Tras su reciente entrenamiento en los datasets de **SIPaKMeD** y **RIVA**, la red AlexNet demostró resultados sobresalientes, superando a todos los demás modelos. Alcanzó una Exactitud del **90.84%** y un impresionante AUC-ROC del **99.21%** en SIPaKMeD, y un 89.51% de Exactitud con 98.61% de AUC-ROC en RIVA. Estos resultados demuestran la eficacia de PyTorch y el fine-tuning para tareas de clasificación morfológica, logrando un balance casi perfecto entre sensibilidad y especificidad. Sin embargo, en **Herlev** el rendimiento fue notablemente inferior (32% Accuracy), denotando que no logró generalizar sobre la menor cantidad y/o contraste de esas imágenes.
+*   🥈 **MobileNet (Sólido y consistente):** Fue consistentemente el segundo mejor modelo a través de todos los datasets y el **mejor en Herlev**. Su pico de rendimiento fue en RIVA (Accuracy: 54.35%, F1: 54.55%). Además, en Herlev mostró una asombrosa capacidad de discriminación latente con un **AUC-ROC del 81.42%**. 
+*   🥉 **InceptionV3:** Mantuvo resultados decentes y competitivos, con métricas de Accuracy rondando el 42% - 47%.
 *   📉 **ResNet50:** Su rendimiento colapsó en los tres datasets (Accuracy inferior al 22% y Sensibilidades paupérrimas del ~15%). Esto sugiere fuertemente que **20 épocas no fueron suficientes** para que esta red (que es muy profunda) ajustara sus densas capas finales, o que congelar todas sus capas base impidió que extrajera características del dominio médico.
 
 ### Diferencias entre Datasets

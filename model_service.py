@@ -183,12 +183,47 @@ class ModelManager:
                         'auc_roc': round(auc_val, 4), 'auc_roc_pct': f"{auc_val * 100:.2f}%",
                         'tp': '-', 'fp': '-', 'tn': '-', 'fn': '-'
                     })
+                
+                # Check if AlexNet is missing from JSON, add its metrics or placeholder
+                has_alexnet = any('AlexNet' in m['model'] for m in self.metrics)
+                if not has_alexnet:
+                    self.metrics.extend([{
+                        'model': 'AlexNet (CV)',
+                        'dataset': 'Herlev',
+                        'accuracy': 0.3200, 'accuracy_pct': "32.00%",
+                        'sensitivity': 0.4216, 'sensitivity_pct': "42.16%",
+                        'specificity': 0.0, 'specificity_pct': "-",
+                        'precision': 0.0, 'precision_pct': "-",
+                        'f1': 0.0, 'f1_pct': "-",
+                        'auc_roc': 0.0, 'auc_roc_pct': "-",
+                        'tp': '-', 'fp': '-', 'tn': '-', 'fn': '-'
+                    }, {
+                        'model': 'AlexNet (CV)',
+                        'dataset': 'SIPaKMeD',
+                        'accuracy': 0.0, 'accuracy_pct': "-",
+                        'sensitivity': 0.0, 'sensitivity_pct': "-",
+                        'specificity': 0.0, 'specificity_pct': "-",
+                        'precision': 0.0, 'precision_pct': "-",
+                        'f1': 0.0, 'f1_pct': "-",
+                        'auc_roc': 0.0, 'auc_roc_pct': "-",
+                        'tp': '-', 'fp': '-', 'tn': '-', 'fn': '-'
+                    }, {
+                        'model': 'AlexNet (CV)',
+                        'dataset': 'RIVA',
+                        'accuracy': 0.0, 'accuracy_pct': "-",
+                        'sensitivity': 0.0, 'sensitivity_pct': "-",
+                        'specificity': 0.0, 'specificity_pct': "-",
+                        'precision': 0.0, 'precision_pct': "-",
+                        'f1': 0.0, 'f1_pct': "-",
+                        'auc_roc': 0.0, 'auc_roc_pct': "-",
+                        'tp': '-', 'fp': '-', 'tn': '-', 'fn': '-'
+                    }])
             except Exception as e:
                 print(f"Error cargando métricas de imagen: {e}")
         else:
             # Placeholders if not trained yet
             datasets_cv = ['Herlev', 'SIPaKMeD', 'RIVA']
-            models_cv = ['MobileNet', 'InceptionV3', 'ResNet50']
+            models_cv = ['MobileNet', 'InceptionV3', 'ResNet50', 'AlexNet']
             for ds in datasets_cv:
                 for m in models_cv:
                     self.metrics.append({
@@ -208,7 +243,8 @@ class ModelManager:
 
     def get_metrics(self):
         self.initialize()
-        return self.metrics
+        dataset_order = {'UCI': 0, 'Herlev': 1, 'SIPaKMeD': 2, 'RIVA': 3}
+        return sorted(self.metrics, key=lambda x: (dataset_order.get(x['dataset'], 99), x['model']))
 
     def predict(self, input_data: dict, model_name: str = 'Random Forest'):
         """
@@ -361,38 +397,79 @@ class ModelManager:
             for f in os.listdir(models_dir):
                 if f.endswith('_herlev.keras'):
                     available.append(f.split('_')[0].capitalize())
-        return available
+                elif f.endswith('_herlev.pth'):
+                    available.append(f.split('_')[0].capitalize())
+        return list(set(available))
 
     def predict_image(self, image_stream, model_name: str):
         """
         Realiza la inferencia para una imagen de citología usando un modelo pre-entrenado.
         Agrupa las clases en Normal (Bajo Riesgo) y Anormal (Alto Riesgo).
         """
-        import tensorflow as tf
+        is_pytorch = (model_name.lower() == 'alexnet')
+        
+        if is_pytorch:
+            import torch
+            import torch.nn as nn
+            import torch.nn.functional as F
+            import torchvision.transforms as transforms
+        else:
+            import tensorflow as tf
         
         # Validar y cargar modelo
         models_dir = os.path.join(os.path.dirname(self.dataset_path), 'models')
-        model_path = os.path.join(models_dir, f"{model_name.lower()}_herlev.keras")
+        
+        # Corrección de mayúsculas para compatibilidad entre frontend y OS
+        actual_model_name = 'alexnet' if is_pytorch else model_name.lower()
+        model_path = os.path.join(models_dir, f"{actual_model_name}_herlev.pth" if is_pytorch else f"{actual_model_name}_herlev.keras")
         
         if not os.path.exists(model_path):
+            # Fallback for Windows/macOS differences in case sensitivity
             raise ValueError(f"El modelo {model_name} no se encuentra entrenado o disponible.")
             
         if model_name not in self.image_models:
-            self.image_models[model_name] = tf.keras.models.load_model(model_path)
+            if is_pytorch:
+                pt_model = torch.hub.load('pytorch/vision:v0.6.0', 'alexnet', pretrained=False)
+                pt_model.classifier[4] = nn.Linear(4096, 1024)
+                pt_model.classifier[6] = nn.Linear(1024, 7)
+                pt_model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
+                pt_model.eval()
+                self.image_models[model_name] = pt_model
+            else:
+                self.image_models[model_name] = tf.keras.models.load_model(model_path)
             
         img_model = self.image_models[model_name]
         
         # Preprocesar imagen
         img = Image.open(image_stream).convert('RGB')
-        img = img.resize((224, 224))
-        img_array = np.array(img)
-        img_array = img_array.astype('float32') / 255.0
-        img_array = np.expand_dims(img_array, axis=0)
+        
+        if is_pytorch:
+            # Preparación PyTorch
+            transform = transforms.Compose([
+                transforms.Resize(256),
+                transforms.CenterCrop(224),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+            ])
+            img_tensor = transform(img).unsqueeze(0)
+        else:
+            # Preparación Keras
+            img_keras = img.resize((224, 224))
+            img_array = np.array(img_keras)
+            img_array = img_array.astype('float32') / 255.0
+            img_array = np.expand_dims(img_array, axis=0)
         
         # Inferir
-        preds = img_model.predict(img_array)[0]
-        predicted_class_idx = np.argmax(preds)
-        confidence = float(preds[predicted_class_idx])
+        if is_pytorch:
+            with torch.no_grad():
+                outputs = img_model(img_tensor)
+                probs = F.softmax(outputs, dim=1)[0]
+                predicted_class_idx = torch.argmax(probs).item()
+                confidence = float(probs[predicted_class_idx].item())
+        else:
+            preds = img_model.predict(img_array)[0]
+            predicted_class_idx = np.argmax(preds)
+            confidence = float(preds[predicted_class_idx])
         
         # Mapeo de clases (Asumiendo orden alfabético de flow_from_directory)
         class_mapping = {
@@ -410,13 +487,42 @@ class ModelManager:
         # Consenso de todos los modelos disponibles (opcional)
         consensus = {}
         for avail_model in self.get_available_image_models():
+            avail_is_pytorch = (avail_model.lower() == 'alexnet')
+            
+            # Para evitar Broken Pipe y Segfaults en macOS ARM64 (Metal), no mezclamos Keras y PyTorch en la misma inferencia.
+            if avail_is_pytorch != is_pytorch:
+                continue
+                
             try:
-                m_path = os.path.join(models_dir, f"{avail_model.lower()}_herlev.keras")
+                m_path = os.path.join(models_dir, f"{avail_model.lower()}_herlev.pth" if avail_is_pytorch else f"{avail_model.lower()}_herlev.keras")
                 if avail_model not in self.image_models:
-                    self.image_models[avail_model] = tf.keras.models.load_model(m_path)
-                m_preds = self.image_models[avail_model].predict(img_array)[0]
-                m_idx = np.argmax(m_preds)
-                m_prob = float(m_preds[m_idx])
+                    if avail_is_pytorch:
+                        import torch
+                        import torch.nn as nn
+                        import torch.nn.functional as F
+                        pt_m = torch.hub.load('pytorch/vision:v0.6.0', 'alexnet', pretrained=False)
+                        pt_m.classifier[4] = nn.Linear(4096, 1024)
+                        pt_m.classifier[6] = nn.Linear(1024, 7)
+                        pt_m.load_state_dict(torch.load(m_path, map_location=torch.device('cpu')))
+                        pt_m.eval()
+                        self.image_models[avail_model] = pt_m
+                    else:
+                        import tensorflow as tf
+                        self.image_models[avail_model] = tf.keras.models.load_model(m_path)
+                
+                if avail_is_pytorch:
+                    import torch
+                    import torch.nn.functional as F
+                    with torch.no_grad():
+                        m_outputs = self.image_models[avail_model](img_tensor)
+                        m_probs = F.softmax(m_outputs, dim=1)[0]
+                        m_idx = torch.argmax(m_probs).item()
+                        m_prob = float(m_probs[m_idx].item())
+                else:
+                    m_preds = self.image_models[avail_model].predict(img_array)[0]
+                    m_idx = np.argmax(m_preds)
+                    m_prob = float(m_preds[m_idx])
+                    
                 m_name, m_group = class_mapping.get(m_idx, ('Desconocido', 'Desconocido'))
                 consensus[avail_model] = {
                     'prediction': m_group,

@@ -18,9 +18,10 @@ Este proyecto utiliza una arquitectura de procesamiento dual (Fase 1 y Fase 2) q
    - Ayuda a los profesionales de la salud y científicos de datos a entender qué modelo es más apto según el umbral de falsos positivos/negativos tolerado en cribados.
 
 3. **Análisis de Imagen de Citología (Visión por Computadora)**
-   - Utiliza *Transfer Learning* sobre arquitecturas profundas probadas para detectar células anormales en muestras de citología (Dataset **Herlev** de 917 imágenes en 7 clases morfológicas).
-   - Agrupa los hallazgos en "Bajo Riesgo" (normal_columnar, normal_intermediate, normal_superficiel) o "Alto Riesgo" (carcinoma_in_situ, light/moderate/severe_dysplastic).
-   - **Modelos Integrados:** MobileNet, InceptionV3 y ResNet50 (entrenados a 20 epochs).
+   - Utiliza *Transfer Learning* sobre arquitecturas profundas probadas para detectar células anormales en muestras de citología.
+   - **Datasets Soportados:** **Herlev** (917 imágenes), **SIPaKMeD** (~4049 imágenes) y **RIVA**, distribuidas en diversas clases morfológicas.
+   - Agrupa los hallazgos en "Bajo Riesgo" (ej. normal_columnar, superficial) o "Alto Riesgo" (ej. carcinoma_in_situ, dysplastic).
+   - **Modelos Integrados:** MobileNet, InceptionV3, ResNet50 y AlexNet (entrenados a 20 epochs).
 
 ## Tecnologías Utilizadas
 
@@ -41,7 +42,9 @@ Análisis Comparativo/
 ├── Media/
 │   ├── risk_factors_cervical_cancer.csv  # Dataset de factores de riesgo clínicos (UCI)
 │   ├── Herlev Dataset/                   # Carpetas de imágenes (train/test divididas por clases)
-│   └── models/                           # Directorio donde se guardan los modelos pre-entrenados (.keras)
+│   ├── SIPaKMeD/                         # Dataset de citologías (dividido en 5 clases morfológicas)
+│   ├── RIVA/                             # Dataset de citologías (dividido en 5 clases morfológicas)
+│   └── models/                           # Directorio donde se guardan los modelos pre-entrenados (.keras y .pth)
 ├── static/
 │   ├── css/
 │   │   └── style.css          # Estilos de la UI
