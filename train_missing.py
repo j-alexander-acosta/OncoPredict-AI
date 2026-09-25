@@ -18,10 +18,23 @@ def get_transforms():
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
 
+USE_FINETUNING_PROGRESIVO = True # Cambiar a False para deshacer y usar AlexNet original
+
 def initialize_model(num_classes, device, pretrained_path=None):
-    model = torch.hub.load('pytorch/vision:v0.6.0', 'alexnet', pretrained=True)
-    model.classifier[4] = nn.Linear(4096, 1024)
-    model.classifier[6] = nn.Linear(1024, num_classes)
+    if USE_FINETUNING_PROGRESIVO:
+        from torchvision import models
+        model = models.efficientnet_b0(weights=models.EfficientNet_B0_Weights.DEFAULT)
+        num_ftrs = model.classifier[1].in_features
+        model.classifier[1] = nn.Sequential(
+            nn.Linear(num_ftrs, 512),
+            nn.ReLU(),
+            nn.Dropout(0.4),
+            nn.Linear(512, num_classes)
+        )
+    else:
+        model = torch.hub.load('pytorch/vision:v0.6.0', 'alexnet', pretrained=True)
+        model.classifier[4] = nn.Linear(4096, 1024)
+        model.classifier[6] = nn.Linear(1024, num_classes)
     
     if pretrained_path and os.path.exists(pretrained_path):
         model.load_state_dict(torch.load(pretrained_path, map_location=device))
@@ -33,13 +46,37 @@ import copy
 
 def train_model(model, trainloader, valloader, device, epochs=50, patience=5):
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+    if not USE_FINETUNING_PROGRESIVO:
+        optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
     
     best_val_loss = float('inf')
     best_model_wts = copy.deepcopy(model.state_dict())
     epochs_no_improve = 0
     
     for epoch in range(epochs):
+        if USE_FINETUNING_PROGRESIVO:
+            if epoch < 5:
+                for param in model.features.parameters():
+                    param.requires_grad = False
+                if epoch == 0:
+                    print("[Antigravity] Fase 1: Extractor congelado. Optimizando clasificador.")
+                optimizer = optim.Adam(model.classifier.parameters(), lr=1e-3)
+            else:
+                for name, child in model.features.named_children():
+                    if int(name) >= 6:
+                        for param in child.parameters():
+                            param.requires_grad = True
+                    else:
+                        for param in child.parameters():
+                            param.requires_grad = False
+                if epoch == 5:
+                    print("[Antigravity] Fase 2: Bloques convolucionales superiores desfreezados.")
+                optimizer = optim.Adam([
+                    {'params': model.features[6].parameters(), 'lr': 1e-5},
+                    {'params': model.features[7].parameters(), 'lr': 1e-5},
+                    {'params': model.classifier.parameters(), 'lr': 1e-4}
+                ], lr=1e-4)
+
         model.train()
         running_loss = 0.0
         for i, data in enumerate(trainloader, 0):
@@ -137,11 +174,12 @@ def append_metrics_to_json(dataset_name, acc, sens, spec, prec, f1, auc):
         metrics = []
         
     # Eliminar entradas previas de AlexNet para este dataset
-    metrics = [m for m in metrics if not (m['model'] == 'AlexNet' and m['dataset'] == dataset_name)]
+    model_name = "EfficientNet_B0" if USE_FINETUNING_PROGRESIVO else "AlexNet"
+    metrics = [m for m in metrics if not (m['model'] == model_name and m['dataset'] == dataset_name)]
     
     metrics.append({
         "dataset": dataset_name,
-        "model": "AlexNet",
+        "model": model_name,
         "accuracy": f"{acc * 100:.2f}%",
         "sensitivity": f"{sens * 100:.2f}%",
         "specificity": f"{spec * 100:.2f}%",
@@ -179,7 +217,8 @@ def main():
         trainloader = DataLoader(train_ds, batch_size=32, shuffle=True)
         testloader = DataLoader(test_ds, batch_size=32, shuffle=False)
         
-        pretrained_path = os.path.join(base_dir, 'models', f'alexnet_{ds_name.lower()}.pth')
+        model_prefix = "efficientnet_b0" if USE_FINETUNING_PROGRESIVO else "alexnet"
+        pretrained_path = os.path.join(base_dir, 'models', f'{model_prefix}_{ds_name.lower()}.pth')
         
         print("Entrenando nuevo modelo...")
         model = initialize_model(num_classes, device)
