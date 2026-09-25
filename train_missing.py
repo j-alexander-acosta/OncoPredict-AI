@@ -192,7 +192,12 @@ def append_metrics_to_json(dataset_name, acc, sens, spec, prec, f1, auc):
         json.dump(metrics, f, indent=4)
 
 def main():
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    if torch.cuda.is_available():
+        device = torch.device("cuda:0")
+    elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+        device = torch.device("mps")
+    else:
+        device = torch.device("cpu")
     base_dir = os.path.join(os.path.dirname(__file__), 'Media')
     transform = get_transforms()
     
