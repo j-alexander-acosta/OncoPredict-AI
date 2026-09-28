@@ -18,16 +18,17 @@ Este proyecto utiliza una arquitectura de procesamiento dual (Fase 1 y Fase 2) q
    - Ayuda a los profesionales de la salud y científicos de datos a entender qué modelo es más apto según el umbral de falsos positivos/negativos tolerado en cribados.
 
 3. **Análisis de Imagen de Citología (Visión por Computadora)**
-   - Utiliza *Transfer Learning* sobre arquitecturas profundas probadas para detectar células anormales en muestras de citología.
+   - Utiliza *Transfer Learning* y **Fine-Tuning Progresivo** sobre arquitecturas profundas probadas para detectar células anormales en muestras de citología.
    - **Datasets Soportados:** **Herlev** (917 imágenes), **SIPaKMeD** (~4049 imágenes) y **RIVA**, distribuidas en diversas clases morfológicas.
    - Agrupa los hallazgos en "Bajo Riesgo" (ej. normal_columnar, superficial) o "Alto Riesgo" (ej. carcinoma_in_situ, dysplastic).
-   - **Modelos Integrados:** MobileNet, InceptionV3, ResNet50 y AlexNet (entrenados a 20 epochs).
+   - **Modelos Integrados:** **EfficientNet-B0 (Recomendado/SOTA)**, MobileNet, InceptionV3, ResNet50 y AlexNet. EfficientNet alcanzó un 94.4% de precisión solucionando el estancamiento morfológico de las redes previas.
+   - Cuenta con soporte de aceleración gráfica **MPS (Apple Silicon)** para entrenamientos en Mac.
 
 ## Tecnologías Utilizadas
 
 - **Backend:** Python 3, Flask.
 - **Machine Learning (Tabular):** Scikit-learn, XGBoost, Imbalanced-learn (SMOTE).
-- **Visión por Computadora (Imágenes):** TensorFlow, Keras, Pillow (PIL).
+- **Visión por Computadora (Imágenes):** PyTorch (para EfficientNet-B0/AlexNet), TensorFlow/Keras (para MobileNet/Inception), Pillow (PIL).
 - **Frontend:** HTML5, Vanilla JavaScript, CSS3 (Diseño responsivo y adaptativo).
 - **Manipulación de Datos:** Pandas, Numpy.
 
@@ -79,11 +80,15 @@ Asegúrate de que los datasets estén en sus rutas correctas dentro de la carpet
 - La carpeta `Herlev Dataset` con las subcarpetas `train` y `test`, y dentro de ellas las clases morfológicas.
 
 ### 4. Entrenar y Generar los Modelos
-El servicio web requiere que los modelos `.keras` existan en la carpeta `Media/models/`. Para generarlos, debes ejecutar el script comparativo por primera vez:
+El servicio web requiere que los modelos existan en la carpeta `Media/models/`. Para generarlos, debes ejecutar los scripts de entrenamiento:
 ```bash
+# Entrenamiento tradicional (Modelos base)
 python analisis_comparativo.py
+
+# Entrenamiento SOTA (EfficientNet-B0 y Fine-Tuning Progresivo con PyTorch/MPS)
+python train_missing.py
 ```
-> *Nota: Este proceso entrenará las redes neuronales durante 20 epochs y el modelo tabular. Puede demorar varios minutos dependiendo de los recursos del equipo.*
+> *Nota: Este proceso entrenará las redes neuronales y el modelo tabular. Puede demorar varios minutos dependiendo de los recursos del equipo (el script de PyTorch aprovecha la GPU o el chip M1/M2/M3 si usas Mac).*
 
 ### 5. Iniciar la Aplicación Web
 Una vez entrenados los modelos, levanta el servidor Flask:
