@@ -118,5 +118,35 @@
         "precision": "93.08%",
         "f1": "93.13%",
         "auc_roc": "99.47%"
+    },
+    {
+        "dataset": "Herlev",
+        "model": "EfficientNet_B0",
+        "accuracy": "36.13%",
+        "sensitivity": "41.45%",
+        "specificity": "89.23%",
+        "precision": "44.70%",
+        "f1": "39.78%",
+        "auc_roc": "79.31%"
+    },
+    {
+        "dataset": "SIPaKMeD",
+        "model": "EfficientNet_B0",
+        "accuracy": "94.42%",
+        "sensitivity": "94.71%",
+        "specificity": "98.60%",
+        "precision": "94.49%",
+        "f1": "94.58%",
+        "auc_roc": "99.39%"
+    },
+    {
+        "dataset": "RIVA",
+        "model": "EfficientNet_B0",
+        "accuracy": "93.63%",
+        "sensitivity": "93.93%",
+        "specificity": "98.39%",
+        "precision": "93.84%",
+        "f1": "93.86%",
+        "auc_roc": "99.34%"
     }
 ]
