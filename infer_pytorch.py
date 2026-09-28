@@ -18,9 +18,20 @@ def infer(model_path, image_path):
         ])
         img_tensor = transform(img).unsqueeze(0)
         
-        pt_model = models.alexnet(pretrained=False)
-        pt_model.classifier[4] = nn.Linear(4096, 1024)
-        pt_model.classifier[6] = nn.Linear(1024, 7)
+        if "efficientnet_b0" in model_path.lower():
+            pt_model = models.efficientnet_b0(pretrained=False)
+            num_ftrs = pt_model.classifier[1].in_features
+            pt_model.classifier[1] = nn.Sequential(
+                nn.Linear(num_ftrs, 512),
+                nn.ReLU(),
+                nn.Dropout(0.4),
+                nn.Linear(512, 7)
+            )
+        else:
+            pt_model = models.alexnet(pretrained=False)
+            pt_model.classifier[4] = nn.Linear(4096, 1024)
+            pt_model.classifier[6] = nn.Linear(1024, 7)
+            
         pt_model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
         pt_model.eval()
         

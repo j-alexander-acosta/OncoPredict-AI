@@ -406,19 +406,22 @@ class ModelManager:
         Realiza la inferencia para una imagen de citología usando un modelo pre-entrenado.
         Agrupa las clases en Normal (Bajo Riesgo) y Anormal (Alto Riesgo).
         """
-        is_pytorch = (model_name.lower() == 'alexnet')
+        is_pytorch = model_name.lower() in ['alexnet', 'efficientnet_b0']
         
         # Validar y cargar modelo
         models_dir = os.path.join(os.path.dirname(self.dataset_path), 'models')
         
         # Corrección de mayúsculas para compatibilidad entre frontend y OS
-        actual_model_name = 'alexnet' if is_pytorch else model_name.lower()
-        model_path = os.path.join(models_dir, f"{actual_model_name}_herlev.pth" if is_pytorch else f"{actual_model_name}_herlev.keras")
+        actual_model_name = model_name.lower()
+        if is_pytorch:
+            model_path = os.path.join(models_dir, f"{actual_model_name}_herlev.pth")
+        else:
+            model_path = os.path.join(models_dir, f"{actual_model_name}_herlev.keras")
         
         if not os.path.exists(model_path):
-            raise ValueError(f"El modelo {model_name} no se encuentra entrenado o disponible.")
+            raise ValueError(f"El modelo {model_name} no se encuentra entrenado o disponible en {model_path}.")
             
-        model_key = model_name.lower()
+        model_key = actual_model_name
         
         if is_pytorch:
             import subprocess
