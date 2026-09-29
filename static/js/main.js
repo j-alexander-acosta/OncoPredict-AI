@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
  * Cambia la pestaña activa (Inferencia vs Benchmark)
  */
 function switchTab(tab) {
-    const tabs = ['predict', 'benchmark', 'image'];
+    const tabs = ['predict', 'benchmark', 'image', 'colpo'];
     tabs.forEach(t => {
         const btn = document.getElementById(`tab-btn-${t}`);
         const view = document.getElementById(`view-${t}`);
@@ -416,6 +416,133 @@ function renderImageResults(result) {
     if (clinicalAdvice) clinicalAdvice.textContent = result.clinical_advice;
     
     const gaugeBar = document.getElementById('img-gauge-bar');
+    if (gaugeBar) {
+        const circumference = 314;
+        const offset = circumference - (circumference * (result.probability / 100));
+        gaugeBar.style.strokeDashoffset = offset;
+        
+        let gaugeColor = '#10b981'; // safe
+        if (result.risk_badge === 'warning') gaugeColor = '#f59e0b';
+        if (result.risk_badge === 'danger') gaugeColor = '#f43f5e';
+        gaugeBar.style.stroke = gaugeColor;
+    }
+}
+
+// ----------------------------------------------------------------------
+// Lógica para Análisis de Colposcopía (In-Vivo)
+// ----------------------------------------------------------------------
+
+document.addEventListener('DOMContentLoaded', () => {
+    const colpoInput = document.getElementById('colpo-input');
+    if (colpoInput) {
+        colpoInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('colpo-preview');
+                    if (preview) {
+                        preview.src = e.target.result;
+                        const container = document.getElementById('colpo-preview-container');
+                        if (container) container.classList.remove('hidden');
+                        const label = document.querySelector('#colpo-upload-area .upload-label');
+                        if (label) label.style.display = 'none';
+                    }
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+});
+
+function clearColpoSelection() {
+    const colpoInput = document.getElementById('colpo-input');
+    if (colpoInput) colpoInput.value = '';
+    
+    const container = document.getElementById('colpo-preview-container');
+    if (container) container.classList.add('hidden');
+    
+    const preview = document.getElementById('colpo-preview');
+    if (preview) preview.src = '';
+    
+    const label = document.querySelector('#colpo-upload-area .upload-label');
+    if (label) label.style.display = 'flex';
+    
+    const resPlaceholder = document.getElementById('colpo-results-placeholder');
+    if (resPlaceholder) resPlaceholder.classList.remove('hidden');
+    
+    const resContent = document.getElementById('colpo-results-content');
+    if (resContent) resContent.classList.add('hidden');
+}
+
+async function runColpoPrediction() {
+    const fileInput = document.getElementById('colpo-input');
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        alert("Por favor selecciona una imagen primero.");
+        return;
+    }
+    
+    const file = fileInput.files[0];
+    
+    const btnSubmit = document.getElementById('btn-submit-colpo');
+    const btnText = document.getElementById('btn-submit-colpo-text');
+    const originalText = btnText ? btnText.textContent : 'Analizar Tejido';
+    
+    if (btnSubmit) btnSubmit.disabled = true;
+    if (btnText) btnText.textContent = 'Analizando...';
+    
+    const formData = new FormData();
+    formData.append('image', file);
+    
+    try {
+        const response = await fetch('/api/predict_colposcopy', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        if (data.status === 'success') {
+            renderColpoResults(data.result);
+            if (btnText) {
+                btnText.textContent = '✓ ¡Análisis Completado!';
+                setTimeout(() => {
+                    btnText.textContent = originalText;
+                }, 2000);
+            }
+        } else {
+            alert('Error en la predicción: ' + (data.message || 'Desconocido'));
+            if (btnText) btnText.textContent = originalText;
+        }
+    } catch (err) {
+        console.error('Error de red al ejecutar inferencia de colposcopía:', err);
+        alert('Error al comunicar con el servidor.');
+        if (btnText) btnText.textContent = originalText;
+    } finally {
+        if (btnSubmit) btnSubmit.disabled = false;
+    }
+}
+
+function renderColpoResults(result) {
+    const resPlaceholder = document.getElementById('colpo-results-placeholder');
+    if (resPlaceholder) resPlaceholder.classList.add('hidden');
+    
+    const resContent = document.getElementById('colpo-results-content');
+    if (resContent) resContent.classList.remove('hidden');
+    
+    const probElem = document.getElementById('display-colpo-probability');
+    if (probElem) probElem.textContent = `${result.probability}%`;
+    
+    const verdictBox = document.getElementById('colpo-risk-verdict-box');
+    const riskBadge = document.getElementById('display-colpo-risk-badge');
+    const predTitle = document.getElementById('display-colpo-prediction-title');
+    const clinicalAdvice = document.getElementById('display-colpo-clinical-advice');
+    
+    if (verdictBox) verdictBox.className = `risk-verdict-box ${result.risk_badge}`;
+    if (riskBadge) riskBadge.textContent = `RIESGO ${result.risk_tier.toUpperCase()}`;
+    if (predTitle) predTitle.textContent = result.prediction;
+    if (clinicalAdvice) clinicalAdvice.textContent = result.clinical_advice;
+    
+    const gaugeBar = document.getElementById('colpo-gauge-bar');
     if (gaugeBar) {
         const circumference = 314;
         const offset = circumference - (circumference * (result.probability / 100));

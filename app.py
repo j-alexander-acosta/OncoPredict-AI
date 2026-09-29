@@ -99,6 +99,30 @@ def api_predict_image():
             'message': str(e)
         }), 500
 
+@app.route('/api/predict_colposcopy', methods=['POST'])
+def api_predict_colposcopy():
+    """
+    Ejecuta la predicción para una imagen macroscópica de colposcopía.
+    """
+    if 'image' not in request.files:
+        return jsonify({'status': 'error', 'message': 'No se proporcionó imagen'}), 400
+        
+    file = request.files['image']
+    if file.filename == '':
+        return jsonify({'status': 'error', 'message': 'No se seleccionó imagen'}), 400
+        
+    try:
+        result = manager.predict_colposcopy(file.stream)
+        return jsonify({
+            'status': 'success',
+            'result': result
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5001))

@@ -1,0 +1,228 @@
+import os
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
+import json
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import torch.nn.functional as F
+from torch.utils.data import DataLoader, random_split
+import torchvision.transforms as transforms
+import torchvision.datasets as datasets
+from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score, roc_auc_score, confusion_matrix
+import numpy as np
+
+def get_transforms():
+    return transforms.Compose([
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
+
+def initialize_model(num_classes, device):
+    from torchvision import models
+    model = models.efficientnet_b0(weights=models.EfficientNet_B0_Weights.DEFAULT)
+    num_ftrs = model.classifier[1].in_features
+    model.classifier[1] = nn.Sequential(
+        nn.Linear(num_ftrs, 512),
+        nn.ReLU(),
+        nn.Dropout(0.4),
+        nn.Linear(512, num_classes)
+    )
+    return model.to(device)
+
+import copy
+
+def train_model(model, trainloader, valloader, device, epochs=50, patience=5):
+    criterion = nn.CrossEntropyLoss()
+    best_val_loss = float('inf')
+    best_model_wts = copy.deepcopy(model.state_dict())
+    epochs_no_improve = 0
+    
+    for epoch in range(epochs):
+        # Fine-Tuning Progresivo
+        if epoch < 5:
+            for param in model.features.parameters():
+                param.requires_grad = False
+            if epoch == 0:
+                print("[Antigravity] Fase 1: Extractor congelado. Optimizando clasificador.")
+            optimizer = optim.Adam(model.classifier.parameters(), lr=1e-3)
+        else:
+            for name, child in model.features.named_children():
+                if int(name) >= 6:
+                    for param in child.parameters():
+                        param.requires_grad = True
+                else:
+                    for param in child.parameters():
+                        param.requires_grad = False
+            if epoch == 5:
+                print("[Antigravity] Fase 2: Bloques convolucionales superiores desfreezados.")
+            optimizer = optim.Adam([
+                {'params': model.features[6].parameters(), 'lr': 1e-5},
+                {'params': model.features[7].parameters(), 'lr': 1e-5},
+                {'params': model.classifier.parameters(), 'lr': 1e-4}
+            ], lr=1e-4)
+
+        model.train()
+        running_loss = 0.0
+        for i, data in enumerate(trainloader, 0):
+            inputs, labels = data[0].to(device), data[1].to(device)
+            optimizer.zero_grad()
+            outputs = model(inputs)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
+            running_loss += loss.item()
+            
+            if i % 50 == 49:
+                print(f"[{epoch + 1}, {i + 1}] train loss: {running_loss / 50:.3f}")
+                running_loss = 0.0
+                
+        # Validation phase
+        model.eval()
+        val_loss = 0.0
+        with torch.no_grad():
+            for data in valloader:
+                inputs, labels = data[0].to(device), data[1].to(device)
+                outputs = model(inputs)
+                loss = criterion(outputs, labels)
+                val_loss += loss.item()
+        
+        val_loss /= len(valloader)
+        print(f"Epoch {epoch + 1}/{epochs} - Val Loss: {val_loss:.4f}")
+        
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            best_model_wts = copy.deepcopy(model.state_dict())
+            epochs_no_improve = 0
+            print("Validation loss decreased, saving best model...")
+        else:
+            epochs_no_improve += 1
+            print(f"EarlyStopping patience: {epochs_no_improve}/{patience}")
+            if epochs_no_improve >= patience:
+                print("Early stopping triggered.")
+                break
+                
+    print('Finished Training')
+    model.load_state_dict(best_model_wts)
+    return model
+
+def evaluate_model(model, testloader, device, num_classes):
+    model.eval()
+    all_preds = []
+    all_labels = []
+    all_probs = []
+    
+    with torch.no_grad():
+        for data in testloader:
+            images, labels = data[0].to(device), data[1].to(device)
+            outputs = model(images)
+            probs = F.softmax(outputs, dim=1)
+            _, predicted = torch.max(outputs.data, 1)
+            
+            all_preds.extend(predicted.cpu().numpy())
+            all_labels.extend(labels.cpu().numpy())
+            all_probs.extend(probs.cpu().numpy())
+            
+    y_true = np.array(all_labels)
+    y_pred = np.array(all_preds)
+    y_prob = np.array(all_probs)
+    
+    acc = accuracy_score(y_true, y_pred)
+    sens = recall_score(y_true, y_pred, average='macro', zero_division=0)
+    prec = precision_score(y_true, y_pred, average='macro', zero_division=0)
+    f1 = f1_score(y_true, y_pred, average='macro', zero_division=0)
+    
+    cnf_matrix = confusion_matrix(y_true, y_pred)
+    spec_list = []
+    for i in range(num_classes):
+        fp = cnf_matrix[:, i].sum() - cnf_matrix[i, i]
+        fn = cnf_matrix[i, :].sum() - cnf_matrix[i, i]
+        tp = cnf_matrix[i, i]
+        tn = cnf_matrix.sum() - (fp + fn + tp)
+        spec = tn / (tn + fp) if (tn + fp) > 0 else 0
+        spec_list.append(spec)
+    spec = np.mean(spec_list)
+    
+    try:
+        auc = roc_auc_score(y_true, y_prob, multi_class='ovr', average='macro')
+    except ValueError:
+        auc = 0.5
+        
+    return acc, sens, spec, prec, f1, auc
+
+def append_metrics_to_json(dataset_name, acc, sens, spec, prec, f1, auc):
+    json_path = os.path.join(os.path.dirname(__file__), 'image_metrics.json')
+    if os.path.exists(json_path):
+        with open(json_path, 'r') as f:
+            metrics = json.load(f)
+    else:
+        metrics = []
+        
+    model_name = "EfficientNet_B0_Colpo"
+    metrics = [m for m in metrics if not (m['model'] == model_name and m['dataset'] == dataset_name)]
+    
+    metrics.append({
+        "dataset": dataset_name,
+        "model": model_name,
+        "accuracy": f"{acc * 100:.2f}%",
+        "sensitivity": f"{sens * 100:.2f}%",
+        "specificity": f"{spec * 100:.2f}%",
+        "precision": f"{prec * 100:.2f}%",
+        "f1": f"{f1 * 100:.2f}%",
+        "auc_roc": f"{auc * 100:.2f}%"
+    })
+    
+    with open(json_path, 'w') as f:
+        json.dump(metrics, f, indent=4)
+
+def main():
+    if torch.cuda.is_available():
+        device = torch.device("cuda:0")
+    elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+        device = torch.device("mps")
+    else:
+        device = torch.device("cpu")
+        
+    print(f"Usando aceleración de hardware: {device}")
+    
+    base_dir = os.path.join(os.path.dirname(__file__), 'Media')
+    ds_dir = os.path.join(base_dir, 'intel-mobileodt-cervical-cancer-screening', 'train', 'train')
+    
+    if not os.path.exists(ds_dir):
+        print(f"Error: No se encontró el dataset en {ds_dir}")
+        return
+
+    transform = get_transforms()
+    
+    full_ds = datasets.ImageFolder(ds_dir, transform=transform)
+    num_classes = len(full_ds.classes)
+    print(f"Clases encontradas: {full_ds.classes} ({num_classes} clases)")
+    
+    train_size = int(0.85 * len(full_ds))
+    test_size = len(full_ds) - train_size
+    train_ds, test_ds = random_split(full_ds, [train_size, test_size], generator=torch.Generator().manual_seed(42))
+        
+    trainloader = DataLoader(train_ds, batch_size=32, shuffle=True)
+    testloader = DataLoader(test_ds, batch_size=32, shuffle=False)
+    
+    pretrained_path = os.path.join(base_dir, 'models', 'efficientnet_b0_colposcopy.pth')
+    os.makedirs(os.path.dirname(pretrained_path), exist_ok=True)
+    
+    print("Entrenando modelo EfficientNet_B0 para Colposcopía...")
+    model = initialize_model(num_classes, device)
+    model = train_model(model, trainloader, testloader, device, epochs=30, patience=5)
+    
+    print(f"Guardando pesos en {pretrained_path}")
+    torch.save(model.state_dict(), pretrained_path)
+        
+    print("Calculando métricas finales...")
+    acc, sens, spec, prec, f1, auc = evaluate_model(model, testloader, device, num_classes)
+    print(f"Acc: {acc:.4f}, Sens: {sens:.4f}, Spec: {spec:.4f}, Prec: {prec:.4f}, F1: {f1:.4f}, AUC: {auc:.4f}")
+    
+    append_metrics_to_json("Intel_MobileODT", acc, sens, spec, prec, f1, auc)
+    print("Métricas guardadas exitosamente. El modelo de colposcopía está listo.")
+
+if __name__ == '__main__':
+    main()

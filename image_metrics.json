@@ -148,5 +148,15 @@
         "precision": "93.84%",
         "f1": "93.86%",
         "auc_roc": "99.34%"
+    },
+    {
+        "dataset": "Intel_MobileODT",
+        "model": "EfficientNet_B0_Colpo",
+        "accuracy": "64.13%",
+        "sensitivity": "54.77%",
+        "specificity": "77.65%",
+        "precision": "62.43%",
+        "f1": "55.62%",
+        "auc_roc": "78.91%"
     }
 ]

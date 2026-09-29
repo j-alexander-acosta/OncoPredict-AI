@@ -18,7 +18,16 @@ def infer(model_path, image_path):
         ])
         img_tensor = transform(img).unsqueeze(0)
         
-        if "efficientnet_b0" in model_path.lower():
+        if "efficientnet_b0_colposcopy" in model_path.lower():
+            pt_model = models.efficientnet_b0(pretrained=False)
+            num_ftrs = pt_model.classifier[1].in_features
+            pt_model.classifier[1] = nn.Sequential(
+                nn.Linear(num_ftrs, 512),
+                nn.ReLU(),
+                nn.Dropout(0.4),
+                nn.Linear(512, 3)
+            )
+        elif "efficientnet_b0" in model_path.lower():
             pt_model = models.efficientnet_b0(pretrained=False)
             num_ftrs = pt_model.classifier[1].in_features
             pt_model.classifier[1] = nn.Sequential(

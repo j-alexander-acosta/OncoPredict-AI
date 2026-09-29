@@ -534,5 +534,63 @@ class ModelManager:
             'consensus': consensus
         }
 
+    def predict_colposcopy(self, image_stream):
+        """
+        Realiza la inferencia para una imagen macroscópica de colposcopía.
+        """
+        models_dir = os.path.join(os.path.dirname(self.dataset_path), 'models')
+        model_path = os.path.join(models_dir, "efficientnet_b0_colposcopy.pth")
+        
+        if not os.path.exists(model_path):
+            raise ValueError(f"El modelo de colposcopía no se encuentra en {model_path}.")
+            
+        import subprocess
+        import json
+        import tempfile
+        import sys
+        
+        with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tmp_img:
+            img = Image.open(image_stream).convert('RGB')
+            img.save(tmp_img.name)
+            tmp_img_path = tmp_img.name
+            
+        try:
+            cmd = [sys.executable, 'infer_pytorch.py', model_path, tmp_img_path]
+            result = subprocess.check_output(cmd, stderr=subprocess.STDOUT, text=True)
+            
+            out_lines = result.strip().split('\n')
+            res_json = None
+            for line in reversed(out_lines):
+                try:
+                    res_json = json.loads(line)
+                    break
+                except:
+                    pass
+                    
+            if not res_json or not res_json.get('success'):
+                raise Exception(res_json.get('error', 'Error en PyTorch inference: ' + result))
+                
+            predicted_class_idx = res_json['idx']
+            confidence = res_json['prob']
+        finally:
+            os.remove(tmp_img_path)
+            
+        class_mapping = {
+            0: ('Tipo 1', 'Bajo', 'safe', 'Unión escamocolumnar completamente visible (ectocérvix). Bajo riesgo anatómico. Manejo estándar.'),
+            1: ('Tipo 2', 'Moderado', 'warning', 'Unión escamocolumnar parcialmente visible. Riesgo anatómico moderado. Posible necesidad de manipulación para visualizar.'),
+            2: ('Tipo 3', 'Alto', 'danger', 'Unión escamocolumnar no visible (endocérvix). Alto riesgo anatómico de lesiones ocultas. Sugiere evaluación endocervical.')
+        }
+        
+        type_name, risk_tier, risk_badge, clinical_advice = class_mapping.get(predicted_class_idx, ('Desconocido', 'Moderado', 'warning', 'No se pudo clasificar con precisión.'))
+        
+        return {
+            'selected_model': 'EfficientNet-B0 (Colposcopía)',
+            'prediction': type_name,
+            'probability': round(confidence * 100, 1),
+            'risk_tier': risk_tier,
+            'risk_badge': risk_badge,
+            'clinical_advice': clinical_advice
+        }
+
 # Instancia única reutilizable
 manager = ModelManager()

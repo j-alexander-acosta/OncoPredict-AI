@@ -66,6 +66,13 @@
                 </svg>
                 Benchmark Comparativo de Modelos
             </button>
+            <button id="tab-btn-colpo" class="tab-btn" role="tab" aria-selected="false" onclick="switchTab('colpo')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+                Análisis de Colposcopía
+            </button>
         </nav>
 
         <!-- SECCIÓN 1: INFERENCIA CLÍNICA -->
@@ -692,6 +699,94 @@
                                 <span class="verdict-tag" id="display-img-risk-badge">BAJO RIESGO</span>
                                 <h3 class="verdict-title" id="display-img-prediction-title">Clase Detectada</h3>
                                 <p class="verdict-desc" id="display-img-clinical-advice">Recomendación Clínica</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECCIÓN 4: ANÁLISIS DE COLPOSCOPÍA -->
+    <section id="view-colpo" class="view-panel" style="display: none;">
+        <div class="clinical-workspace-grid">
+            <div class="panel-card form-card">
+                <div class="card-header">
+                    <div class="section-badge">Visión por Computadora (In-Vivo)</div>
+                    <h2 class="card-title">Análisis de Colposcopía (Intel/MobileODT)</h2>
+                    <p class="card-description">Sube una imagen macroscópica del tejido cervicouterino para evaluar el Tipo de Zona de Transformación.</p>
+                </div>
+                
+                <div class="form-section">
+                    <h3 class="section-heading">Selección de Modelo CNN</h3>
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <select id="colpo-model-selector" class="form-control" disabled>
+                            <option value="EfficientNet_B0_Colpo" selected>EfficientNet_B0 (Colposcopía)</option>
+                        </select>
+                    </div>
+                    
+                    <h3 class="section-heading">Subir Fotografía Clínica</h3>
+                    <div class="image-upload-area" id="colpo-upload-area">
+                        <input type="file" id="colpo-input" accept="image/jpeg, image/png" style="display: none;">
+                        <label for="colpo-input" class="upload-label">
+                            <div class="upload-icon">📷</div>
+                            <span>Haz clic para subir o arrastra la imagen aquí</span>
+                            <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-top: 5px;">Formatos soportados: JPG, PNG</span>
+                        </label>
+                        <div id="colpo-preview-container" class="hidden" style="margin-top: 15px; text-align: center;">
+                            <img id="colpo-preview" src="" alt="Preview" style="max-width: 100%; max-height: 250px; border-radius: 8px; border: 1px solid var(--border-color);">
+                            <button class="preset-btn outline" onclick="clearColpoSelection()" style="margin-top: 10px;">Cambiar Imagen</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-submit-container">
+                    <button type="button" class="btn-execute" id="btn-submit-colpo" onclick="runColpoPrediction()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                        <span id="btn-submit-colpo-text">Analizar Tejido</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="results-column">
+                <div class="panel-card results-card" id="colpo-results-card">
+                    <div class="card-header">
+                        <div class="section-badge result-badge">Resultado CV</div>
+                        <h2 class="card-title">Dictamen Colposcópico</h2>
+                        <span class="active-model-tag">EfficientNet-B0</span>
+                    </div>
+
+                    <div id="colpo-results-placeholder" class="results-placeholder">
+                        <div class="pulse-circle">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                <polyline points="21 15 16 10 5 21"></polyline>
+                            </svg>
+                        </div>
+                        <h3>Esperando Imagen</h3>
+                        <p>Sube una imagen colposcópica y presiona <strong>"Analizar Tejido"</strong>.</p>
+                    </div>
+
+                    <div id="colpo-results-content" class="results-content hidden">
+                        <div class="gauge-container">
+                            <div class="gauge-circle" id="colpo-gauge-circle">
+                                <svg viewBox="0 0 120 120" class="gauge-svg">
+                                    <circle class="gauge-bg" cx="60" cy="60" r="50"></circle>
+                                    <circle class="gauge-fill" id="colpo-gauge-bar" cx="60" cy="60" r="50" stroke-dasharray="314" stroke-dashoffset="314"></circle>
+                                </svg>
+                                <div class="gauge-text">
+                                    <span class="gauge-percentage" id="display-colpo-probability">0%</span>
+                                    <span class="gauge-label">Confianza</span>
+                                </div>
+                            </div>
+                            
+                            <div class="risk-verdict-box" id="colpo-risk-verdict-box">
+                                <span class="verdict-tag" id="display-colpo-risk-badge">TIPO DE ZONA</span>
+                                <h3 class="verdict-title" id="display-colpo-prediction-title">Clase Detectada</h3>
+                                <p class="verdict-desc" id="display-colpo-clinical-advice">Recomendación Clínica</p>
                             </div>
                         </div>
                     </div>
