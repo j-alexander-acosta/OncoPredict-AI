@@ -2,7 +2,10 @@
 
 OncoPredict AI es una aplicación web impulsada por Machine Learning (Inteligencia Artificial) diseñada para la detección temprana y evaluación del riesgo del cáncer cervicouterino. 
 
-Este proyecto utiliza una arquitectura de procesamiento dual (Fase 1 y Fase 2) que combina modelos predictivos tradicionales basados en factores de riesgo clínicos, con visión por computadora mediante Redes Neuronales Convolucionales (CNN) para el análisis de citologías.
+Este proyecto utiliza una arquitectura de procesamiento triple que combina: 
+1. Modelos predictivos tradicionales basados en factores de riesgo clínicos (Datos Tabulares).
+2. Visión por Computadora mediante Redes Neuronales Convolucionales (CNN) para el análisis microscópico de citologías.
+3. Visión por Computadora para el análisis macroscópico de tejido cervical in-vivo (Colposcopía).
 
 ## Características Principales
 
@@ -14,15 +17,25 @@ Este proyecto utiliza una arquitectura de procesamiento dual (Fase 1 y Fase 2) q
    - Entrega un dictamen de riesgo (Bajo, Moderado, Alto) y provee un consenso entre todos los modelos para mayor seguridad diagnóstica.
 
 2. **Benchmark Comparativo de Modelos**
-   - Panel de rendimiento en tiempo real que compara las métricas clave (Accuracy, Sensibilidad, Especificidad, Precisión, F1-Score, AUC-ROC) de los algoritmos de clasificación de ambas fases.
+   - Panel de rendimiento en tiempo real que compara las métricas clave (Accuracy, Sensibilidad, Especificidad, Precisión, F1-Score, AUC-ROC) de los algoritmos de clasificación.
+   - Aparta claramente las evaluaciones de modelos de **datos tabulares**, de **imágenes microscópicas (Citología)** y de **imágenes macroscópicas (Colposcopía)**, permitiendo comparar el desempeño entre datasets.
    - Ayuda a los profesionales de la salud y científicos de datos a entender qué modelo es más apto según el umbral de falsos positivos/negativos tolerado en cribados.
 
-3. **Análisis de Imagen de Citología (Visión por Computadora)**
-   - Utiliza *Transfer Learning* y **Fine-Tuning Progresivo** sobre arquitecturas profundas probadas para detectar células anormales en muestras de citología.
+3. **Análisis de Imagen de Citología (Microscopía / Visión por Computadora)**
+   - Utiliza *Transfer Learning* y **Fine-Tuning Progresivo** sobre arquitecturas profundas probadas para detectar células anormales en muestras celulares de microscopio.
    - **Datasets Soportados:** **Herlev** (917 imágenes), **SIPaKMeD** (~4049 imágenes) y **RIVA**, distribuidas en diversas clases morfológicas.
    - Agrupa los hallazgos en "Bajo Riesgo" (ej. normal_columnar, superficial) o "Alto Riesgo" (ej. carcinoma_in_situ, dysplastic).
    - **Modelos Integrados:** **EfficientNet-B0 (Recomendado/SOTA)**, MobileNet, InceptionV3, ResNet50 y AlexNet. EfficientNet alcanzó un 94.4% de precisión solucionando el estancamiento morfológico de las redes previas.
-   - Cuenta con soporte de aceleración gráfica **MPS (Apple Silicon)** para entrenamientos en Mac.
+   - Cuenta con soporte de aceleración gráfica **MPS (Apple Silicon)** para entrenamientos locales en Mac.
+
+4. **Análisis de Colposcopía (Macroscopía In-Vivo / Visión por Computadora)**
+   - Evalúa imágenes macroscópicas del cuello uterino capturadas durante la colposcopía para identificar y clasificar el tipo anatómico de la lesión.
+   - **Dataset Soportado:** **Intel & MobileODT Cervical Cancer Screening** (Kaggle), que clasifica los cuellos uterinos según el tipo de Zona de Transformación.
+   - Clasifica los hallazgos en 3 categorías médicas:
+     - **Tipo 1:** Unión escamocolumnar completamente visible (Bajo riesgo).
+     - **Tipo 2:** Unión parcialmente visible (Riesgo moderado).
+     - **Tipo 3:** Unión no visible, ubicada en el canal endocervical (Alto riesgo de lesiones ocultas).
+   - **Modelo Integrado:** **EfficientNet-B0**, adaptado mediante fine-tuning progresivo y modificado en su última capa para inferir entre las 3 clases anatómicas.
 
 ## Tecnologías Utilizadas
 
@@ -42,9 +55,10 @@ Análisis Comparativo/
 ├── requirements.txt           # Dependencias del entorno Python
 ├── Media/
 │   ├── risk_factors_cervical_cancer.csv  # Dataset de factores de riesgo clínicos (UCI)
-│   ├── Herlev Dataset/                   # Carpetas de imágenes (train/test divididas por clases)
-│   ├── SIPaKMeD/                         # Dataset de citologías (dividido en 5 clases morfológicas)
-│   ├── RIVA/                             # Dataset de citologías (dividido en 5 clases morfológicas)
+│   ├── Herlev Dataset/                   # Dataset de imágenes microscópicas de citologías
+│   ├── SIPaKMeD/                         # Dataset de citologías microscópicas
+│   ├── RIVA/                             # Dataset de citologías microscópicas
+│   ├── intel-mobileodt-cervical-cancer-screening/ # Dataset de imágenes macroscópicas de colposcopía
 │   └── models/                           # Directorio donde se guardan los modelos pre-entrenados (.keras y .pth)
 ├── static/
 │   ├── css/
@@ -85,10 +99,13 @@ El servicio web requiere que los modelos existan en la carpeta `Media/models/`. 
 # Entrenamiento tradicional (Modelos base)
 python analisis_comparativo.py
 
-# Entrenamiento SOTA (EfficientNet-B0 y Fine-Tuning Progresivo con PyTorch/MPS)
+# Entrenamiento SOTA para Citologías Microscópicas (PyTorch/MPS)
 python train_missing.py
+
+# Entrenamiento SOTA para Colposcopías Macroscópicas (PyTorch/MPS)
+python train_colposcopy.py
 ```
-> *Nota: Este proceso entrenará las redes neuronales y el modelo tabular. Puede demorar varios minutos dependiendo de los recursos del equipo (el script de PyTorch aprovecha la GPU o el chip M1/M2/M3 si usas Mac).*
+> *Nota: Este proceso entrenará las redes neuronales y el modelo tabular. Puede demorar varios minutos dependiendo de los recursos del equipo.*
 
 ### 5. Iniciar la Aplicación Web
 Una vez entrenados los modelos, levanta el servidor Flask:

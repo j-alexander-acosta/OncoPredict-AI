@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
  * Cambia la pestaña activa (Inferencia vs Benchmark)
  */
 function switchTab(tab) {
-    const tabs = ['predict', 'benchmark', 'image', 'colpo'];
+    const tabs = ['predict', 'image', 'colpo', 'benchmark'];
     tabs.forEach(t => {
         const btn = document.getElementById(`tab-btn-${t}`);
         const view = document.getElementById(`view-${t}`);
