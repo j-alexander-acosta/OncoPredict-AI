@@ -37,6 +37,16 @@ Este proyecto utiliza una arquitectura de procesamiento triple que combina:
      - **Tipo 3:** Unión no visible, ubicada en el canal endocervical (Alto riesgo de lesiones ocultas).
    - **Modelo Integrado:** **EfficientNet-B0**, adaptado mediante fine-tuning progresivo y modificado en su última capa para inferir entre las 3 clases anatómicas.
 
+## Datasets Utilizados
+
+Para el desarrollo y entrenamiento de los distintos modelos, este proyecto emplea los siguientes conjuntos de datos de acceso público y rigor académico:
+
+- **[Cervical cancer (Risk Factors)](https://www.nature.com/articles/s41597-025-06280-2)** (Vía UCI Machine Learning / Nature): Conjunto de datos tabulares con variables demográficas, hábitos y factores de riesgo clínicos.
+- **[Herlev Dataset](https://www.kaggle.com/datasets/ayaanelahi/herlev-cervical-cancer-dataset)**: Dataset de imágenes de citologías microscópicas recolectadas en el Hospital Universitario Herlev.
+- **[SIPaKMeD Dataset](https://www.cs.uoi.gr/~marina/sipakmed.html)**: Base de datos exhaustiva de imágenes de células cervicales segmentadas para el análisis morfológico.
+- **[RIVA Dataset](https://www.nature.com/articles/s41597-025-06280-2)**: Dataset reciente de citologías empleado para robustecer el análisis de anomalías microscópicas.
+- **[Intel & MobileODT Cervical Cancer Screening](https://www.kaggle.com/c/intel-mobileodt-cervical-cancer-screening)**: Competición de Kaggle con imágenes macroscópicas in-vivo (colposcopías) para clasificar la Zona de Transformación del cuello uterino.
+
 ## Tecnologías Utilizadas
 
 - **Backend:** Python 3, Flask.
