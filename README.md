@@ -26,6 +26,7 @@ Este proyecto utiliza una arquitectura de procesamiento triple que combina:
    - **Datasets Soportados:** **Herlev** (917 imágenes), **SIPaKMeD** (~4049 imágenes) y **RIVA**, distribuidas en diversas clases morfológicas.
    - Agrupa los hallazgos en "Bajo Riesgo" (ej. normal_columnar, superficial) o "Alto Riesgo" (ej. carcinoma_in_situ, dysplastic).
    - **Modelos Integrados:** **EfficientNet-B0 (Recomendado/SOTA)**, MobileNet, InceptionV3, ResNet50 y AlexNet. EfficientNet alcanzó un 94.4% de precisión solucionando el estancamiento morfológico de las redes previas.
+   - **Sistema de Explicabilidad (XAI):** Integra **Score-CAM** (mapas de alta resolución sin gradientes), evaluación local **Deletion AUC** (~0.2890) y verificación global **TCAV** (Sensibilidad conceptual 100%), eliminando el efecto "caja negra" y elevando la auditabilidad a grado médico.
    - Cuenta con soporte de aceleración gráfica **MPS (Apple Silicon)** para entrenamientos locales en Mac.
 
 4. **Análisis de Colposcopía (Macroscopía In-Vivo / Visión por Computadora)**

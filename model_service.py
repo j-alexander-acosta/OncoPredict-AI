@@ -413,6 +413,7 @@ class ModelManager:
         
         # Corrección de mayúsculas para compatibilidad entre frontend y OS
         actual_model_name = model_name.lower()
+        xai_info = None
         if is_pytorch:
             model_path = os.path.join(models_dir, f"{actual_model_name}_herlev.pth")
         else:
@@ -452,6 +453,7 @@ class ModelManager:
                     
                 predicted_class_idx = res_json['idx']
                 confidence = res_json['prob']
+                xai_info = res_json.get('xai')
             finally:
                 os.remove(tmp_img_path)
                 
@@ -531,7 +533,8 @@ class ModelManager:
             'risk_tier': risk_tier,
             'risk_badge': risk_badge,
             'clinical_advice': clinical_advice,
-            'consensus': consensus
+            'consensus': consensus,
+            'xai': xai_info
         }
 
     def predict_colposcopy(self, image_stream):
@@ -572,6 +575,7 @@ class ModelManager:
                 
             predicted_class_idx = res_json['idx']
             confidence = res_json['prob']
+            xai_info = res_json.get('xai')
         finally:
             os.remove(tmp_img_path)
             
@@ -589,7 +593,8 @@ class ModelManager:
             'probability': round(confidence * 100, 1),
             'risk_tier': risk_tier,
             'risk_badge': risk_badge,
-            'clinical_advice': clinical_advice
+            'clinical_advice': clinical_advice,
+            'xai': xai_info
         }
 
 # Instancia única reutilizable

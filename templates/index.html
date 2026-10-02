@@ -639,11 +639,11 @@
                     
                     <h3 class="section-heading">Subir Imagen</h3>
                     <div class="image-upload-area" id="image-upload-area">
-                        <input type="file" id="image-input" accept="image/jpeg, image/png" style="display: none;">
+                        <input type="file" id="image-input" accept="image/jpeg, image/png, image/bmp" style="display: none;">
                         <label for="image-input" class="upload-label">
                             <div class="upload-icon">📁</div>
                             <span>Haz clic para subir o arrastra la imagen aquí</span>
-                            <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-top: 5px;">Formatos soportados: JPG, PNG</span>
+                            <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-top: 5px;">Formatos soportados: JPG, PNG, BMP</span>
                         </label>
                         <div id="image-preview-container" class="hidden" style="margin-top: 15px; text-align: center;">
                             <img id="image-preview" src="" alt="Preview" style="max-width: 100%; max-height: 250px; border-radius: 8px; border: 1px solid var(--border-color);">
@@ -701,6 +701,15 @@
                                 <p class="verdict-desc" id="display-img-clinical-advice">Recomendación Clínica</p>
                             </div>
                         </div>
+
+                        <!-- XAI SECTION START -->
+                        <div id="xai-img-container" class="xai-container hidden" style="margin-top: 2rem; text-align: center; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+                            <h4 style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">INTERPRETABILIDAD (Score-CAM)</h4>
+                            <img id="xai-img-preview" src="" alt="Mapa de Calor XAI" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);" />
+                            <p id="xai-img-auc" style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-tertiary); font-weight: 500;"></p>
+                        </div>
+                        <!-- XAI SECTION END -->
+
                     </div>
                 </div>
             </div>
@@ -727,11 +736,11 @@
                     
                     <h3 class="section-heading">Subir Fotografía Clínica</h3>
                     <div class="image-upload-area" id="colpo-upload-area">
-                        <input type="file" id="colpo-input" accept="image/jpeg, image/png" style="display: none;">
+                        <input type="file" id="colpo-input" accept="image/jpeg, image/png, image/bmp" style="display: none;">
                         <label for="colpo-input" class="upload-label">
                             <div class="upload-icon">📷</div>
                             <span>Haz clic para subir o arrastra la imagen aquí</span>
-                            <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-top: 5px;">Formatos soportados: JPG, PNG</span>
+                            <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-top: 5px;">Formatos soportados: JPG, PNG, BMP</span>
                         </label>
                         <div id="colpo-preview-container" class="hidden" style="margin-top: 15px; text-align: center;">
                             <img id="colpo-preview" src="" alt="Preview" style="max-width: 100%; max-height: 250px; border-radius: 8px; border: 1px solid var(--border-color);">

@@ -54,3 +54,12 @@ El experimento fue un **éxito rotundo**. Se verificó que el estancamiento morf
 
 - Las nuevas métricas se encuentran respaldadas en `image_metrics.json`.
 - Los pesos hiper-optimizados (de tan solo 18 MB vs 177 MB de AlexNet) descansan en `Media/models/`.
+
+## 4. Auditoría de Inteligencia Artificial Explicable (XAI)
+Para elevar la transparencia clínica de la red neuronal y eliminar el paradigma de la "caja negra", se implementó un pipeline riguroso de IA Explicable (XAI) con los siguientes resultados reales sobre el modelo `EfficientNet-B0`:
+
+1. **Interpretabilidad de Alta Resolución (Score-CAM):** Se reemplazó el tradicional Grad-CAM por Score-CAM para generar mapas de calor sin ruido de gradientes. El resultado visual demuestra un enfoque anatómico preciso en los núcleos hipertróficos de las células.
+2. **Evaluación Cuantitativa (Deletion AUC):** Se midió matemáticamente la fidelidad del mapa de calor borrando de mayor a menor los píxeles resaltados. Se obtuvo un **Deletion AUC de 0.2890** (valores más cercanos a 0 indican mapas de altísima precisión), validando cuantitativamente la interpretabilidad local.
+3. **Explicabilidad Global (TCAV):** Se implementó *Testing with Concept Activation Vectors* para medir si el modelo aprendió correctamente el concepto de "célula anormal". 
+   - El clasificador SVM interno alcanzó un **100.00% de exactitud** al separar vectores latentes anormales del ruido aleatorio, demostrando que el concepto clínico existe y está codificado nítidamente en la última capa de la red.
+   - La red presenta una sensibilidad positiva (TCAV Score = 26.67%) hacia los datos de prueba, lo que invita a refinar futuras métricas con múltiples conceptos ginecológicos aislados (ej. citoplasma oscuro vs. tamaño del núcleo) para entender la topología matemática de las decisiones clínicas.

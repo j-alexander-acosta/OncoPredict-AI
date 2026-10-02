@@ -426,6 +426,20 @@ function renderImageResults(result) {
         if (result.risk_badge === 'danger') gaugeColor = '#f43f5e';
         gaugeBar.style.stroke = gaugeColor;
     }
+    
+    const xaiContainer = document.getElementById('xai-img-container');
+    const xaiPreview = document.getElementById('xai-img-preview');
+    const xaiAuc = document.getElementById('xai-img-auc');
+    
+    if (xaiContainer && xaiPreview && xaiAuc) {
+        if (result.xai && result.xai.image_url) {
+            xaiPreview.src = result.xai.image_url + "?t=" + new Date().getTime();
+            xaiAuc.textContent = `Deletion AUC: ${result.xai.auc}`;
+            xaiContainer.classList.remove('hidden');
+        } else {
+            xaiContainer.classList.add('hidden');
+        }
+    }
 }
 
 // ----------------------------------------------------------------------
