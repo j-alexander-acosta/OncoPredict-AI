@@ -4,6 +4,7 @@ Dataset: Cervical cancer (Risk Factors) - UCI Machine Learning Repository
 Variable objetivo: Biopsy
 """
 
+import os
 import warnings
 warnings.filterwarnings('ignore', category=FutureWarning)
 warnings.filterwarnings('ignore', category=UserWarning)
@@ -141,6 +142,8 @@ def train_and_evaluate(X, y, random_state: int = 42):
 
 if __name__ == '__main__':
     dataset_path = 'risk_factors_cervical_cancer.csv'
+    if not os.path.exists(dataset_path):
+        dataset_path = os.path.join(os.path.dirname(__file__), 'Media', 'risk_factors_cervical_cancer.csv')
     X, y = load_and_preprocess(dataset_path)
     df_metrics = train_and_evaluate(X, y)
     
