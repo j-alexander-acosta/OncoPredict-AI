@@ -243,8 +243,18 @@ class ModelManager:
 
     def get_metrics(self):
         self.initialize()
-        dataset_order = {'UCI': 0, 'Herlev': 1, 'SIPaKMeD': 2, 'RIVA': 3}
+        dataset_order = {'UCI': 0, 'Herlev': 1, 'SIPaKMeD': 2, 'RIVA': 3, 'Intel_MobileODT': 4}
         return sorted(self.metrics, key=lambda x: (dataset_order.get(x['dataset'], 99), x['model']))
+
+    def get_tabular_metrics(self):
+        self.initialize()
+        return [m for m in self.metrics if m.get('dataset') == 'UCI']
+
+    def get_image_metrics(self):
+        self.initialize()
+        dataset_order = {'Herlev': 1, 'SIPaKMeD': 2, 'RIVA': 3, 'Intel_MobileODT': 4}
+        image_metrics = [m for m in self.metrics if m.get('dataset') != 'UCI']
+        return sorted(image_metrics, key=lambda x: (dataset_order.get(x['dataset'], 99), x['model']))
 
     def predict(self, input_data: dict, model_name: str = 'Random Forest'):
         """

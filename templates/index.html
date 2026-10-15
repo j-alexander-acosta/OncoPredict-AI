@@ -513,17 +513,18 @@
 
         <!-- SECCIÓN 2: BENCHMARK COMPARATIVO -->
         <section id="view-benchmark" class="view-panel">
+            <!-- TABLA 1: MODELOS CLÍNICOS TABULARES -->
             <div class="panel-card benchmark-card">
                 <div class="card-header">
-                    <div class="section-badge">Validación Clínica</div>
-                    <h2 class="card-title">Métricas de Evaluación en Conjunto de Prueba (15% Estratificado)</h2>
+                    <div class="section-badge">Validación Clínica • Datos Tabulares</div>
+                    <h2 class="card-title">Métricas de Evaluación en Datos Clínicos Tabulares (15% Estratificado)</h2>
                     <p class="card-description">
-                        Evaluación rigurosa sobre 129 casos de prueba (121 negativos, 8 positivos) sin fuga de información (*leakage-free*).
+                        Evaluación rigurosa sobre 129 casos de prueba clínicos (121 controles negativos, 8 casos positivos) basada en 32 factores de riesgo epidemiológicos del dataset UCI, estrictamente sin fuga de información (*leakage-free*).
                     </p>
                 </div>
 
                 <div class="table-responsive">
-                    <table class="benchmark-table" id="benchmark-table">
+                    <table class="benchmark-table" id="benchmark-table-tabular">
                         <thead>
                             <tr>
                                 <th>Algoritmo</th>
@@ -537,14 +538,14 @@
                                 <th>Matriz (TP / FP / TN / FN)</th>
                             </tr>
                         </thead>
-                        <tbody id="benchmark-table-body">
-                            {% for m in metrics %}
+                        <tbody id="benchmark-table-body-tabular">
+                            {% for m in tabular_metrics %}
                             <tr class="{% if m.model == 'Random Forest' or m.model == 'XGBoost' %}highlight-row{% endif %}">
                                 <td class="model-cell">
                                     <div class="cell-model-name">{{ m.model }}</div>
                                 </td>
                                 <td>
-                                    {{ m.dataset }}
+                                    <span class="dataset-tag">{{ m.dataset }}</span>
                                 </td>
                                 <td>
                                     <strong>{{ m.accuracy_pct }}</strong>
@@ -608,6 +609,112 @@
                         <div class="insight-body">
                             <h4>Consideración Clínica de Cribado</h4>
                             <p>Para aplicaciones de tamizaje masivo, el umbral de probabilidad puede ajustarse hacia la izquierda para favorecer la Sensibilidad clínica y reducir los Falsos Negativos.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABLA 2: MODELOS DE VISIÓN POR COMPUTADORA (CITOLOGÍA Y COLPOSCOPÍA) -->
+            <div class="panel-card benchmark-card" style="margin-top: 32px;">
+                <div class="card-header">
+                    <div class="section-badge badge-purple">Visión por Computadora • Citología y Colposcopía</div>
+                    <h2 class="card-title">Métricas de Evaluación en Diagnóstico por Imagen (Deep Learning / CV)</h2>
+                    <p class="card-description">
+                        Evaluación multicategórica de redes neuronales convolucionales profundas (CNN) sobre conjuntos de prueba de imágenes microscópicas citológicas (Herlev, SIPaKMeD, RIVA) y macroscópicas colposcópicas (Intel & MobileODT).
+                    </p>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="benchmark-table" id="benchmark-table-images">
+                        <thead>
+                            <tr>
+                                <th>Algoritmo CNN</th>
+                                <th>Dataset</th>
+                                <th>Modalidad Clínica</th>
+                                <th>Accuracy</th>
+                                <th>Sensibilidad (Macro)</th>
+                                <th>Especificidad</th>
+                                <th>Precisión (Macro)</th>
+                                <th>F1-Score</th>
+                                <th>AUC-ROC</th>
+                            </tr>
+                        </thead>
+                        <tbody id="benchmark-table-body-images">
+                            {% for m in image_metrics %}
+                            <tr class="{% if 'EfficientNet' in m.model or (m.model == 'AlexNet (CV)' and (m.dataset == 'SIPaKMeD' or m.dataset == 'RIVA')) %}highlight-row{% endif %}">
+                                <td class="model-cell">
+                                    <div class="cell-model-name">{{ m.model }}</div>
+                                </td>
+                                <td>
+                                    <span class="dataset-tag">{{ m.dataset }}</span>
+                                </td>
+                                <td>
+                                    {% if m.dataset == 'Herlev' %}
+                                        <span class="modality-badge">Citología (7 Clases)</span>
+                                    {% elif m.dataset == 'SIPaKMeD' or m.dataset == 'RIVA' %}
+                                        <span class="modality-badge">Citología (5 Clases)</span>
+                                    {% elif m.dataset == 'Intel_MobileODT' %}
+                                        <span class="modality-badge badge-colpo">Colposcopía (3 Tipos Cervix)</span>
+                                    {% else %}
+                                        <span class="modality-badge">Imágenes Médicas</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <strong>{{ m.accuracy_pct }}</strong>
+                                    {% if m.accuracy %}<div style="font-size: 0.75rem; color: var(--text-muted);">{{ "%.4f"|format(m.accuracy) }}</div>{% endif %}
+                                </td>
+                                <td>
+                                    <span class="metric-highlight {% if m.sensitivity and m.sensitivity >= 0.80 %}best-val{% endif %}">
+                                        <strong>{{ m.sensitivity_pct }}</strong>
+                                    </span>
+                                    {% if m.sensitivity %}<div style="font-size: 0.75rem; color: var(--text-muted);">{{ "%.4f"|format(m.sensitivity) }}</div>{% endif %}
+                                </td>
+                                <td>
+                                    <span class="metric-highlight {% if m.specificity and m.specificity >= 0.95 %}best-val{% endif %}">
+                                        <strong>{{ m.specificity_pct }}</strong>
+                                    </span>
+                                    {% if m.specificity %}<div style="font-size: 0.75rem; color: var(--text-muted);">{{ "%.4f"|format(m.specificity) }}</div>{% endif %}
+                                </td>
+                                <td>
+                                    <strong>{{ m.precision_pct }}</strong>
+                                    {% if m.precision %}<div style="font-size: 0.75rem; color: var(--text-muted);">{{ "%.4f"|format(m.precision) }}</div>{% endif %}
+                                </td>
+                                <td>
+                                    <strong>{{ m.f1_pct }}</strong>
+                                    {% if m.f1 %}<div style="font-size: 0.75rem; color: var(--text-muted);">{{ "%.4f"|format(m.f1) }}</div>{% endif %}
+                                </td>
+                                <td>
+                                    <span class="metric-pill {% if m.auc_roc and m.auc_roc >= 0.90 %}top-auc{% elif m.auc_roc and m.auc_roc >= 0.78 %}mid-auc{% endif %}">
+                                        <strong>{{ m.auc_roc_pct }}</strong>
+                                    </span>
+                                    {% if m.auc_roc %}<div style="font-size: 0.75rem; color: var(--text-muted);">{{ "%.4f"|format(m.auc_roc) }}</div>{% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="benchmark-insights">
+                    <div class="insight-item">
+                        <div class="insight-icon">🔬</div>
+                        <div class="insight-body">
+                            <h4>Rendimiento SOTA en Citología</h4>
+                            <p><strong>EfficientNet_B0</strong> y <strong>AlexNet</strong> logran desempeños sobresalientes en SIPaKMeD (Acc: 94.42%, AUC: 99.39%) y RIVA (Acc: 93.63%, AUC: 99.34%), confirmando alta discriminación en frotis papilares.</p>
+                        </div>
+                    </div>
+                    <div class="insight-item">
+                        <div class="insight-icon">🎯</div>
+                        <div class="insight-body">
+                            <h4>Célula Aislada (Herlev)</h4>
+                            <p>En el dataset Herlev (7 clases citológicas a nivel unicelular), <strong>MobileNet (AUC: 81.66%)</strong> y <strong>AlexNet (AUC: 80.39%)</strong> muestran la mejor capacidad discriminativa macroscópica.</p>
+                        </div>
+                    </div>
+                    <div class="insight-item">
+                        <div class="insight-icon">📷</div>
+                        <div class="insight-body">
+                            <h4>Colposcopía Macroscópica</h4>
+                            <p><strong>EfficientNet_B0_Colpo</strong> alcanza un <strong>AUC-ROC de 78.91%</strong> en la clasificación de tipos de zona de transformación (Tipos 1, 2 y 3) sobre el dataset Intel & MobileODT.</p>
                         </div>
                     </div>
                 </div>

@@ -24,10 +24,14 @@ manager.initialize()
 def index():
     """Página principal de la aplicación."""
     metrics = manager.get_metrics()
+    tabular_metrics = manager.get_tabular_metrics()
+    image_metrics = manager.get_image_metrics()
     presets = manager.get_presets()
     return render_template(
         'index.html',
         metrics=metrics,
+        tabular_metrics=tabular_metrics,
+        image_metrics=image_metrics,
         presets=presets,
         feature_names=FEATURE_NAMES
     )
@@ -35,9 +39,11 @@ def index():
 
 @app.route('/api/metrics', methods=['GET'])
 def api_metrics():
-    """Retorna las métricas comparativas de los 5 modelos."""
+    """Retorna las métricas comparativas de los modelos tabulares e imágenes."""
     return jsonify({
         'status': 'success',
+        'tabular_metrics': manager.get_tabular_metrics(),
+        'image_metrics': manager.get_image_metrics(),
         'metrics': manager.get_metrics()
     })
 
