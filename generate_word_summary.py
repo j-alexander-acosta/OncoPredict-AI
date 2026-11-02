@@ -6,6 +6,8 @@ try:
     manager = ModelManager()
     tabular_metrics = manager.get_tabular_metrics()
     image_metrics = manager.get_image_metrics()
+    shap_metrics = manager.get_shap_metrics()
+    xai_summary = manager.get_xai_summary()
 
     doc = Document()
     doc.add_heading('Análisis Comparativo - Métricas de Evaluación e Hiperparámetros', 0)
@@ -110,6 +112,68 @@ try:
         row_cells = table4.add_row().cells
         for i in range(3):
             row_cells[i].text = r[i]
+
+    doc.add_paragraph()
+
+    # ==========================================
+    # Tabla 5: Atribución SHAP sobre XGBoost (Top Factores de Riesgo)
+    # ==========================================
+    doc.add_heading('5. Tabla de Atribución SHAP sobre XGBoost (Top Factores de Riesgo en Log-Odds)', level=2)
+    doc.add_paragraph(
+        'Valores exactos TreeSHAP (mean(|SHAP value|) en unidades log-odds) calculados sobre el modelo XGBoost '
+        'en el conjunto de prueba (n=129) y entrenamiento balanceado (n=1,364), comparados con la Importancia de Gini '
+        'de Random Forest. Los 5 factores principales concentran el 75.62% de la atribución matemática total.'
+    )
+
+    headers_shap = [
+        "Ranking",
+        "Factor de Riesgo Clínico (UCI)",
+        "mean(|SHAP|) Test (log-odds)",
+        "Aporte SHAP Test (%)",
+        "mean(|SHAP|) Train (log-odds)",
+        "Importancia Gini (RF)",
+        "Interpretación Clínica (Validación Post-Hoc)"
+    ]
+    table5 = doc.add_table(rows=1, cols=len(headers_shap))
+    table5.style = 'Table Grid'
+    for i, h in enumerate(headers_shap):
+        table5.rows[0].cells[i].text = h
+
+    for s in shap_metrics:
+        row_cells = table5.add_row().cells
+        for i, h in enumerate(headers_shap):
+            row_cells[i].text = str(s.get(h, ''))
+
+    doc.add_paragraph()
+
+    # ==========================================
+    # Tabla 6: Tabla Resumen de Técnicas XAI y Validación Post-Hoc
+    # ==========================================
+    doc.add_heading('6. Tabla Resumen de Técnicas de Explicabilidad (XAI) y Validación Post-Hoc', level=2)
+    doc.add_paragraph(
+        'Síntesis de los métodos de Inteligencia Artificial Explicable (XAI) implementados para auditar tanto los '
+        'modelos de datos clínicos tabulares (SHAP sobre XGBoost y Gini sobre Random Forest) como las arquitecturas '
+        'convolucionales en imágenes citológicas (Grad-CAM, Score-CAM, Deletion AUC y TCAV).'
+    )
+
+    headers_xai = [
+        "Dominio / Modalidad",
+        "Modelo Auditado",
+        "Técnica XAI Implementada",
+        "Tipo de Explicabilidad",
+        "Nivel Transparencia / Interpretabilidad / Auditabilidad",
+        "Resultado Cuantitativo Clave",
+        "Hallazgo Clínico Validado"
+    ]
+    table6 = doc.add_table(rows=1, cols=len(headers_xai))
+    table6.style = 'Table Grid'
+    for i, h in enumerate(headers_xai):
+        table6.rows[0].cells[i].text = h
+
+    for x in xai_summary:
+        row_cells = table6.add_row().cells
+        for i, h in enumerate(headers_xai):
+            row_cells[i].text = str(x.get(h, ''))
 
     output_path = '/Users/alexanderacosta/Documents/Proyectos/Análisis Comparativo/Resumen_Configuracion_e_Hiperparametros.docx'
     doc.save(output_path)

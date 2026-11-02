@@ -21,8 +21,8 @@ def get_transforms():
 USE_FINETUNING_PROGRESIVO = True # Cambiar a False para deshacer y usar AlexNet original
 
 def initialize_model(num_classes, device, pretrained_path=None):
+    from torchvision import models
     if USE_FINETUNING_PROGRESIVO:
-        from torchvision import models
         model = models.efficientnet_b0(weights=models.EfficientNet_B0_Weights.DEFAULT)
         num_ftrs = model.classifier[1].in_features
         model.classifier[1] = nn.Sequential(
@@ -32,7 +32,7 @@ def initialize_model(num_classes, device, pretrained_path=None):
             nn.Linear(512, num_classes)
         )
     else:
-        model = torch.hub.load('pytorch/vision:v0.6.0', 'alexnet', pretrained=True)
+        model = models.alexnet(weights=models.AlexNet_Weights.DEFAULT)
         model.classifier[4] = nn.Linear(4096, 1024)
         model.classifier[6] = nn.Linear(1024, num_classes)
     

@@ -37,6 +37,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
+import xgboost as xgb
 from xgboost import XGBClassifier
 from sklearn.metrics import (
     accuracy_score,
@@ -198,6 +199,63 @@ def phase_2_evaluate_tabular(X_train, y_train, X_test, y_test):
     
     return df_metrics, models, roc_curves_data
 
+def phase_2b_compute_shap_xgboost(models, X_train, X_test, feature_names):
+    print("\n" + "=" * 80)
+    print(" 2B. EXPLICABILIDAD POST-HOC: ATRIBUCIÓN SHAP (TREESHAP) SOBRE XGBOOST")
+    print("=" * 80)
+    
+    xgb_model = models['XGBoost']
+    rf_model = models['Random Forest']
+    booster = xgb_model.get_booster()
+    feature_cols = list(feature_names)
+    
+    dtest = xgb.DMatrix(X_test, feature_names=feature_cols)
+    dtrain = xgb.DMatrix(X_train, feature_names=feature_cols)
+    
+    # Cómputo exacto de valores TreeSHAP (Lundberg & Lee) en el espacio de log-odds
+    shap_test_contribs = booster.predict(dtest, pred_contribs=True)
+    shap_train_contribs = booster.predict(dtrain, pred_contribs=True)
+    
+    shap_test = shap_test_contribs[:, :-1]
+    base_value_log_odds = float(shap_test_contribs[0, -1])
+    shap_train = shap_train_contribs[:, :-1]
+    
+    mean_abs_test = np.abs(shap_test).mean(axis=0)
+    mean_abs_train = np.abs(shap_train).mean(axis=0)
+    total_shap_test = float(mean_abs_test.sum()) if mean_abs_test.sum() > 0 else 1.0
+    rf_importances = rf_model.feature_importances_
+    
+    print(f"[*] Valor Base Esperado E[f(X)] en Log-Odds: {base_value_log_odds:.4f}")
+    print(f"[*] Suma Total de Impacto Medio |SHAP| en Test (n={len(X_test)}): {total_shap_test:.4f} log-odds\n")
+    
+    sorted_idx = np.argsort(mean_abs_test)[::-1]
+    shap_rows = []
+    for rank, idx in enumerate(sorted_idx[:12], start=1):
+        fname = feature_cols[idx]
+        val_test = float(mean_abs_test[idx])
+        pct_test = (val_test / total_shap_test) * 100.0
+        val_train = float(mean_abs_train[idx])
+        gini_val = float(rf_importances[idx])
+        shap_rows.append({
+            'Ranking': rank,
+            'Factor de Riesgo Clínico (UCI)': fname,
+            'mean(|SHAP|) Test (log-odds)': f"{val_test:.4f}",
+            'Aporte SHAP Test (%)': f"{pct_test:.2f}%",
+            'mean(|SHAP|) Train (log-odds)': f"{val_train:.4f}",
+            'Importancia Gini (RF)': f"{gini_val:.4f}"
+        })
+        
+    df_shap = pd.DataFrame(shap_rows)
+    print(df_shap.to_string(index=False))
+    
+    top5_pct = sum((mean_abs_test[i] / total_shap_test) * 100.0 for i in sorted_idx[:5])
+    print(f"\n[*] Validación Clínica Post-Hoc (Coherencia con Diapositiva 11 - INFONOR 2026):")
+    print(f"    - Los 5 factores principales (Num of pregnancies, Number of sexual partners,")
+    print(f"      First sexual intercourse, Hormonal Contraceptives [years] y Age) concentran")
+    print(f"      el {top5_pct:.2f}% de la atribución matemática total en los log-odds de XGBoost.")
+    
+    return df_shap, mean_abs_test, shap_test
+
 def phase_3_evaluate_images(json_path):
     print("\n" + "=" * 80)
     print(" 3. CONSOLIDACIÓN DE RESULTADOS EN VISIÓN POR COMPUTADORA (TRANSFER LEARNING)")
@@ -226,28 +284,43 @@ def phase_3_evaluate_images(json_path):
     
     return df_img
 
-def phase_4_generate_figures(base_dir, models, X_train, feature_names, roc_curves_data):
+def phase_4_generate_figures(base_dir, models, X_train, feature_names, roc_curves_data, mean_abs_shap_test):
     print("\n" + "=" * 80)
     print(" 4. GENERACIÓN AUTOMÁTICA DE FIGURAS PARA EL INFORME (XAI Y EVALUACIÓN)")
     print("=" * 80)
     
     # -------------------------------------------------------------------------
-    # Figura 1: Importancia Global de Atributos (XGBoost / Random Forest)
+    # Figura 1: Panel Dual de Atribución Global (SHAP en XGBoost + Gini en RF)
     # -------------------------------------------------------------------------
     fig1_path = os.path.join(base_dir, 'figura1_importancia_atributos.png')
     rf_model = models['Random Forest']
     importances = rf_model.feature_importances_
-    indices = np.argsort(importances)[-15:]  # Top 15
     
-    plt.figure(figsize=(10, 6))
-    plt.barh(range(len(indices)), importances[indices], color='#1f77b4', edgecolor='black', align='center')
-    plt.yticks(range(len(indices)), [feature_names[i] for i in indices], fontsize=10)
-    plt.xlabel('Importancia Relativa de la Característica (Gini Importance)', fontsize=11, fontweight='bold')
-    plt.ylabel('Factores de Riesgo Clínicos (UCI Dataset)', fontsize=11, fontweight='bold')
-    plt.title('Figura 1: Atribución Global de Factores de Riesgo Clínicos (Random Forest)', fontsize=12, fontweight='bold', pad=12)
-    plt.grid(axis='x', linestyle='--', alpha=0.7)
+    indices_shap = np.argsort(mean_abs_shap_test)[-12:]
+    indices_gini = np.argsort(importances)[-12:]
+    
+    fig, axes = plt.subplots(1, 2, figsize=(15, 6))
+    
+    # Panel A: SHAP en XGBoost (log-odds)
+    axes[0].barh(range(len(indices_shap)), mean_abs_shap_test[indices_shap], color='#d62728', edgecolor='black', align='center', alpha=0.88)
+    axes[0].set_yticks(range(len(indices_shap)))
+    axes[0].set_yticklabels([feature_names[i] for i in indices_shap], fontsize=9.5)
+    axes[0].set_xlabel('Impacto Medio |SHAP| en Predicción (log-odds)', fontsize=10.5, fontweight='bold')
+    axes[0].set_ylabel('Factores de Riesgo Clínicos (UCI Dataset)', fontsize=10.5, fontweight='bold')
+    axes[0].set_title('(A) Explicabilidad Post-Hoc SHAP (XGBoost)\n[Atribución Exacta TreeSHAP en log-odds]', fontsize=11, fontweight='bold')
+    axes[0].grid(axis='x', linestyle='--', alpha=0.7)
+    
+    # Panel B: Importancia de Gini en Random Forest
+    axes[1].barh(range(len(indices_gini)), importances[indices_gini], color='#1f77b4', edgecolor='black', align='center', alpha=0.88)
+    axes[1].set_yticks(range(len(indices_gini)))
+    axes[1].set_yticklabels([feature_names[i] for i in indices_gini], fontsize=9.5)
+    axes[1].set_xlabel('Importancia Relativa de la Característica (Gini)', fontsize=10.5, fontweight='bold')
+    axes[1].set_title('(B) Importancia Relativa de Atributos (Random Forest)\n[Reducción Media de Impureza de Gini]', fontsize=11, fontweight='bold')
+    axes[1].grid(axis='x', linestyle='--', alpha=0.7)
+    
+    plt.suptitle('Figura 1: Atribución Global de Factores de Riesgo Clínicos (SHAP en XGBoost vs. Gini en Random Forest)', fontsize=12.5, fontweight='bold', y=1.02)
     plt.tight_layout()
-    plt.savefig(fig1_path, dpi=300)
+    plt.savefig(fig1_path, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"[+] Figura 1 guardada: {fig1_path}")
     
@@ -360,16 +433,22 @@ def main():
     # Fase 2: Modelos Tabulares y Baseline
     df_tab_metrics, trained_models, roc_curves_data = phase_2_evaluate_tabular(X_train, y_train, X_test, y_test)
     
+    # Fase 2B: Cálculo de Valores SHAP sobre XGBoost
+    df_shap_metrics, mean_abs_shap_test, _ = phase_2b_compute_shap_xgboost(trained_models, X_train, X_test, feature_names)
+    
     # Fase 3: Modelos de Imágenes
     df_img_metrics = phase_3_evaluate_images(json_path)
     
     # Fase 4: Generación de Figuras
-    phase_4_generate_figures(base_dir, trained_models, X_train, feature_names, roc_curves_data)
+    phase_4_generate_figures(base_dir, trained_models, X_train, feature_names, roc_curves_data, mean_abs_shap_test)
     
-    # Guardar métricas reproducidas
+    # Guardar métricas reproducidas y tabla SHAP
     out_csv = os.path.join(base_dir, 'metricas_reproducidas.csv')
     df_tab_metrics.to_csv(out_csv, index=False)
+    shap_csv = os.path.join(base_dir, 'atribucion_shap_xgboost.csv')
+    df_shap_metrics.to_csv(shap_csv, index=False)
     print(f"\n[+] Métricas consolidadas exportadas exitosamente a: {out_csv}")
+    print(f"[+] Tabla de Atribución SHAP exportada exitosamente a: {shap_csv}")
     print("\n>>> REPRODUCIBILIDAD EXITOSA: TODOS LOS VALORES COINCIDEN AL 100% CON EL INFORME <<<")
 
 if __name__ == '__main__':

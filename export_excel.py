@@ -6,10 +6,14 @@ def export_metrics_to_excel(output_path):
     manager = ModelManager()
     tabular_metrics = manager.get_tabular_metrics()
     image_metrics = manager.get_image_metrics()
+    shap_metrics = manager.get_shap_metrics()
+    xai_summary = manager.get_xai_summary()
     
     # Formatear DataFrames
     df_tab = pd.DataFrame(tabular_metrics)
     df_img = pd.DataFrame(image_metrics)
+    df_shap = pd.DataFrame(shap_metrics)
+    df_xai = pd.DataFrame(xai_summary)
     
     col_rename = {
         'model': 'Algoritmo',
@@ -34,12 +38,14 @@ def export_metrics_to_excel(output_path):
     cols_img = ['model', 'dataset', 'accuracy_pct', 'sensitivity_pct', 'specificity_pct', 'precision_pct', 'f1_pct', 'auc_roc_pct']
     df_img = df_img[[c for c in cols_img if c in df_img.columns]].rename(columns=col_rename)
     
-    # Exportar a Excel con 2 hojas separadas
+    # Exportar a Excel con hojas separadas
     with pd.ExcelWriter(output_path, engine='openpyxl') as writer:
         df_tab.to_excel(writer, sheet_name='Datos_Tabulares_UCI', index=False)
         df_img.to_excel(writer, sheet_name='Datos_Imagenes_CV', index=False)
+        df_shap.to_excel(writer, sheet_name='Atribucion_SHAP_XGBoost', index=False)
+        df_xai.to_excel(writer, sheet_name='Resumen_Tecnicas_XAI', index=False)
         
-    print(f"Exportado exitosamente en 2 hojas separadas a: {output_path}")
+    print(f"Exportado exitosamente en hojas separadas a: {output_path}")
 
 if __name__ == '__main__':
     export_metrics_to_excel('metricas_evaluacion.xlsx')

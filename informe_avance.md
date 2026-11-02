@@ -66,23 +66,31 @@ Para las imágenes, se emplearon tres repositorios estándar: **Herlev** (917 im
 
 Para responder a la pregunta de investigación, las visualizaciones no se limitan a gráficos descriptivos generales, sino que abordan directamente la interpretabilidad y auditabilidad clínica exigida por los especialistas médicos.
 
-### Figura 1: Atribución Global de Factores de Riesgo Clínicos (Random Forest)
-*Archivo generado:* `figura1_importancia_atributos.png`
+### Figura 1 y Tabla de Atribución SHAP: Factores de Riesgo Clínicos (XGBoost TreeSHAP y Random Forest Gini)
+*Archivos generados:* `figura1_importancia_atributos.png`, `atribucion_shap_xgboost.csv`
 
 ```
-  Factores de Riesgo (Top 7)          Importancia Relativa (Gini)
-  -----------------------------------------------------------------
-  Age                                 |##################### 0.142
-  Hormonal Contraceptives (years)     |################# 0.118
-  First sexual intercourse            |############## 0.098
-  Number of sexual partners           |############# 0.091
-  Num of pregnancies                  |########### 0.076
-  Smokes (years)                      |######## 0.054
-  STDs (number)                       |###### 0.041
++---------+----------------------------------+-------------------------+-------------------+-------------------------+-------------------+
+| Ranking | Factor de Riesgo Clínico (UCI)   | mean(|SHAP|) Test (log) | Aporte SHAP Test  | mean(|SHAP|) Train (log)| Importancia Gini  |
++---------+----------------------------------+-------------------------+-------------------+-------------------------+-------------------+
+|    1    | Num of pregnancies               |         1.0488          |      18.06%       |         1.3955          |      0.1735       |
+|    2    | Number of sexual partners        |         0.9874          |      17.00%       |         1.5794          |      0.1456       |
+|    3    | First sexual intercourse         |         0.9102          |      15.67%       |         1.2212          |      0.1484       |
+|    4    | Hormonal Contraceptives (years)  |         0.7538          |      12.98%       |         0.6955          |      0.1002       |
+|    5    | Age                              |         0.6920          |      11.91%       |         0.6137          |      0.1134       |
+|    6    | Hormonal Contraceptives          |         0.2243          |       3.86%       |         0.2812          |      0.0296       |
+|    7    | STDs: Time since first diagnosis |         0.1825          |       3.14%       |         0.1907          |      0.0151       |
+|    8    | STDs: Number of diagnosis        |         0.1674          |       2.88%       |         0.1999          |      0.0141       |
+|    9    | Dx                               |         0.1369          |       2.36%       |         0.1997          |      0.0335       |
+|   10    | Smokes (packs/year)              |         0.1200          |       2.07%       |         0.1071          |      0.0193       |
+|   11    | IUD (years)                      |         0.1139          |       1.96%       |         0.1587          |      0.0279       |
+|   12    | STDs:HIV                         |         0.0705          |       1.21%       |         0.1289          |      0.0140       |
++---------+----------------------------------+-------------------------+-------------------+-------------------------+-------------------+
+  * Valor Base Esperado E[f(X)] en Log-Odds = -0.0381 | Suma Total de Impacto Medio |SHAP| en Test (n=129) = 5.8087 log-odds
 ```
 
-* **Descripción y Lectura sin Ambigüedad:** La **Figura 1** presenta en el eje vertical (ordenadas) los factores de riesgo del dataset UCI ordenados descendentemente según su poder predictivo, mientras que el eje horizontal (abscisas) cuantifica la **Importancia Relativa de la Característica** (reducción media de impureza de Gini, adimensional entre 0.0 y 0.20).
-* **Comentario Clínico:** La visualización demuestra una sólida coherencia médica: la edad de la paciente (`Age`), los años de consumo de anticonceptivos hormonales (`Hormonal Contraceptives (years)`), la edad de inicio de relaciones sexuales (`First sexual intercourse`) y el número de parejas sexuales (`Number of sexual partners`) concentran más del 45% de la capacidad discriminativa del modelo. Esto coincide plenamente con la literatura ginecológica sobre la persistencia de la infección por virus del papiloma humano (VPH).
+* **Descripción y Lectura sin Ambigüedad:** La **Figura 1** presenta un panel comparativo dual: en el **Panel (A)** se cuantifica la atribución *post-hoc* exacta mediante **TreeSHAP sobre XGBoost** ($\text{mean}(|\text{SHAP value}|)$ expresado en unidades de **log-odds** sobre el conjunto de prueba, $n=129$), y en el **Panel (B)** se contrasta con la **Importancia Relativa de la Característica en Random Forest** (reducción media de impureza de Gini, adimensional entre $0.0$ y $0.20$).
+* **Comentario Clínico:** La auditoría matemática mediante **SHAP (XGBoost)** valida la influencia directa de los factores epidemiológicos sobre los *log-odds* de predicción: el número de embarazos previos (`Num of pregnancies`, $1.0488\text{ log-odds}$, $18.06\%$), el número de parejas sexuales (`Number of sexual partners`, $0.9874\text{ log-odds}$, $17.00\%$), la edad de inicio sexual (`First sexual intercourse`, $0.9102\text{ log-odds}$, $15.67\%$), los años de uso de anticonceptivos hormonales (`Hormonal Contraceptives (years)`, $0.7538\text{ log-odds}$, $12.98\%$) y la edad (`Age`, $0.6920\text{ log-odds}$, $11.91\%$) concentran el **75.62% de la atribución total** del modelo en prueba (y superan el 52% de reducción de impureza de Gini en Random Forest). Esto guarda coherencia absoluta con la literatura ginecológica actual sobre exposición y persistencia del Virus del Papiloma Humano (VPH).
 
 ### Figura 2: Explicabilidad Visual Local en Citología con Redes Neuronales (Score-CAM)
 *Archivo generado:* `figura2_explicabilidad_visual_xai.png`
@@ -157,6 +165,31 @@ Se formalizó como punto de comparación un **Clasificador Trivial (*Dummy Class
 | RIVA (7 cat.)   | ResNet50              | 21.18%   | 20.00%       | 80.00%        |  4.24%    |  6.99%   | 60.54%   |
 | RIVA (7 cat.)   | AlexNet               | 92.83%   | 93.20%       | 98.19%        | 93.08%    | 93.13%   | 99.47%   |
 +-----------------+-----------------------+----------+--------------+---------------+-----------+----------+----------+
+```
+
+### 3.5. Tabla Resumen de Técnicas de Explicabilidad (XAI) y Validación Post-Hoc
+
+```
++-----------------------------------+-----------------------------+------------------------------------+-------------------------------------------+----------------------------------------------------------+
+| Dominio / Modalidad               | Modelo Auditado             | Técnica XAI Implementada           | Tipo de Explicabilidad                    | Resultado Cuantitativo y Validación Clínica              |
++-----------------------------------+-----------------------------+------------------------------------+-------------------------------------------+----------------------------------------------------------+
+| Tabular Clínico (UCI)             | XGBoost                     | SHAP (TreeSHAP Exacto)             | Post-Hoc Global y Local (en log-odds)     | Top-5 acumula 75.62% de |SHAP| (Embarazos: 1.0488,       |
+|                                   |                             |                                    |                                           | Parejas: 0.9874, Inicio sexual: 0.9102, Anticonceptivos: |
+|                                   |                             |                                    |                                           | 0.7538, Edad: 0.6920 log-odds). Coherencia con VPH.      |
++-----------------------------------+-----------------------------+------------------------------------+-------------------------------------------+----------------------------------------------------------+
+| Tabular Clínico (UCI)             | Random Forest               | Importancia Relativa de Gini (MDI) | Post-Hoc Global (reducción de impureza)   | Top-5 concentra 68.11% de reducción de impureza de Gini  |
+|                                   |                             |                                    |                                           | (Embarazos: 0.1735, Inicio sexual: 0.1484, Parejas:      |
+|                                   |                             |                                    |                                           | 0.1456, Edad: 0.1134, Anticonceptivos años: 0.1002).     |
++-----------------------------------+-----------------------------+------------------------------------+-------------------------------------------+----------------------------------------------------------+
+| Tabular Clínico (UCI)             | Regresión Logística / DT    | Intrínseca (Pesos β / Reglas)      | Intrínseca (Transparente por diseño)      | Inspección directa de coeficientes y umbrales booleanos; |
+|                                   |                             |                                    |                                           | menor discriminación no lineal (AUC 50.93% - 58.06%).    |
++-----------------------------------+-----------------------------+------------------------------------+-------------------------------------------+----------------------------------------------------------+
+| Citología (SIPaKMeD/Herlev/RIVA)  | AlexNet (PyTorch)           | Grad-CAM / Score-CAM               | Post-Hoc Visual (Mapa Saliencia 224x224)  | Foco en núcleo hipercromático y bordes citoplasmáticos   |
+|                                   |                             |                                    |                                           | (relación N/C alterada), sin activar artefactos/fondo.   |
++-----------------------------------+-----------------------------+------------------------------------+-------------------------------------------+----------------------------------------------------------+
+| Citología (SIPaKMeD)              | EfficientNet-B0 / CNNs      | Deletion AUC + TCAV                | Cuantitativa Post-Hoc (Fidelidad/Concepto)| Deletion AUC = 0.2890 (Local) | TCAV = 26.67%            |
+|                                   |                             |                                    |                                           | (Exactitud SVM CAV = 100.0% en separación conceptual).   |
++-----------------------------------+-----------------------------+------------------------------------+-------------------------------------------+----------------------------------------------------------+
 ```
 
 ---

@@ -651,8 +651,10 @@
                                 <td>
                                     {% if m.dataset == 'Herlev' %}
                                         <span class="modality-badge">Citología (7 Clases)</span>
-                                    {% elif m.dataset == 'SIPaKMeD' or m.dataset == 'RIVA' %}
+                                    {% elif m.dataset == 'SIPaKMeD' %}
                                         <span class="modality-badge">Citología (5 Clases)</span>
+                                    {% elif m.dataset == 'RIVA' %}
+                                        <span class="modality-badge">Citología (8 Clases Bethesda)</span>
                                     {% elif m.dataset == 'Intel_MobileODT' %}
                                         <span class="modality-badge badge-colpo">Colposcopía (3 Tipos Cervix)</span>
                                     {% else %}
@@ -700,7 +702,7 @@
                         <div class="insight-icon">🔬</div>
                         <div class="insight-body">
                             <h4>Rendimiento SOTA en Citología</h4>
-                            <p><strong>EfficientNet_B0</strong> y <strong>AlexNet</strong> logran desempeños sobresalientes en SIPaKMeD (Acc: 94.42%, AUC: 99.39%) y RIVA (Acc: 93.63%, AUC: 99.34%), confirmando alta discriminación en frotis papilares.</p>
+                            <p><strong>EfficientNet_B0</strong> y <strong>AlexNet</strong> logran desempeños sobresalientes en SIPaKMeD (Acc: 94.42%, AUC: 99.39%) y lideran en el complejo dataset RIVA de 8 categorías Bethesda (AUC: 88.90% y 87.62%, Spec: >93%), confirmando alta discriminación en frotis de Papanicolaou.</p>
                         </div>
                     </div>
                     <div class="insight-item">

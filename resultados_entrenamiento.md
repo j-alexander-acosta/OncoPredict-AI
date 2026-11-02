@@ -29,14 +29,14 @@ Gracias al mecanismo de detención temprana (*early stopping*), los modelos enco
 - **Puntaje F1:** 94.58%
 - **Área bajo la curva (AUC):** 99.39%
 
-### B. Dataset RIVA (~21,200 imágenes)
-*El comportamiento positivo se replica casi con exactitud en este set de alta densidad.*
-- **Precisión (Accuracy):** 93.63% *(Modelos previos rondaban entre el 21% y el 47%)*
-- **Sensibilidad:** 93.93%
-- **Especificidad:** 98.39%
-- **Precisión Positiva:** 93.84%
-- **Puntaje F1:** 93.86%
-- **Área bajo la curva (AUC):** 99.34%
+### B. Dataset RIVA (16,841 imágenes: 959 frotis completos + 15,882 células recortadas en 8 categorías Bethesda)
+*Evaluación sobre citología convencional (Papanicolaou) con 8 clases del Sistema Bethesda (`ASCH`, `ASCUS`, `ENDO`, `HSIL`, `INFL`, `LSIL`, `NILM`, `SCC`), donde el azar uniforme es 12.50%.*
+- **Precisión (Accuracy):** 57.50% (`EfficientNet-B0`) / **59.20%** (`AlexNet`) *(Modelos Keras previos: `MobileNet` 50.40%, `InceptionV3` 46.99%, `ResNet50` 32.89%)*
+- **Sensibilidad (Macro):** 46.96% (`EfficientNet-B0`) / 50.20% (`AlexNet`)
+- **Especificidad:** 93.11% (`EfficientNet-B0`) / 93.49% (`AlexNet`)
+- **Precisión Positiva (Macro):** **60.44%** (`EfficientNet-B0`) / 53.82% (`AlexNet`)
+- **Puntaje F1:** 47.29% (`EfficientNet-B0`) / 49.80% (`AlexNet`)
+- **Área bajo la curva (AUC-ROC):** 87.62% (`EfficientNet-B0`) / **88.90%** (`AlexNet`)
 
 ### C. Dataset Herlev (~900 imágenes)
 *Limitaciones de Volumen de Datos.*

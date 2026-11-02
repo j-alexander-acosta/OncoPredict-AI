@@ -61,9 +61,13 @@ from model_service import ModelManager
 manager = ModelManager()
 tabular_metrics = manager.get_tabular_metrics()
 image_metrics = manager.get_image_metrics()
+shap_metrics = manager.get_shap_metrics()
+xai_summary = manager.get_xai_summary()
 
 df_tab = pd.DataFrame(tabular_metrics)
 df_img = pd.DataFrame(image_metrics)
+df_shap = pd.DataFrame(shap_metrics)
+df_xai = pd.DataFrame(xai_summary)
 
 col_rename = {
     'model': 'Algoritmo',
@@ -94,6 +98,8 @@ output_path = '/Users/alexanderacosta/Documents/Proyectos/Análisis Comparativo/
 with pd.ExcelWriter(output_path, engine='openpyxl') as writer:
     df_tab_clean.to_excel(writer, sheet_name='Metricas_Tabulares_UCI', index=False)
     df_img_clean.to_excel(writer, sheet_name='Metricas_Imagenes_CV', index=False)
+    df_shap.to_excel(writer, sheet_name='Atribucion_SHAP_XGBoost', index=False)
+    df_xai.to_excel(writer, sheet_name='Resumen_Tecnicas_XAI', index=False)
     df_pipeline.to_excel(writer, sheet_name='Pipeline_Preprocesamiento', index=False)
     df_hyperparams.to_excel(writer, sheet_name='Hiperparametros_Modelos', index=False)
 

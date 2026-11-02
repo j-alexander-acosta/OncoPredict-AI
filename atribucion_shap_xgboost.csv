@@ -1,0 +1,14 @@
+Ranking;Factor de Riesgo Clínico (UCI);mean(|SHAP|) Test (log-odds);Aporte SHAP Test (%);mean(|SHAP|) Train (log-odds);Importancia Gini (RF)
+1;Num of pregnancies;1.0488;18.06%;1.3955;0.1735
+2;Number of sexual partners;0.9874;17.00%;1.5794;0.1456
+3;First sexual intercourse;0.9102;15.67%;1.2212;0.1484
+4;Hormonal Contraceptives (years);0.7538;12.98%;0.6955;0.1002
+5;Age;0.692;11.91%;0.6137;0.1134
+6;Hormonal Contraceptives;0.2243;3.86%;0.2812;0.0296
+7;STDs: Time since first diagnosis;0.1825;3.14%;0.1907;0.0151
+8;STDs: Number of diagnosis;0.1674;2.88%;0.1999;0.0141
+9;Dx;0.1369;2.36%;0.1997;0.0335
+10;Smokes (packs/year);0.12;2.07%;0.1071;0.0193
+11;IUD (years);0.1139;1.96%;0.1587;0.0279
+12;STDs:HIV;0.0705;1.21%;0.1289;0.014
+;;;;;

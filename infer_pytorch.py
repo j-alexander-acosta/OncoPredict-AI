@@ -28,30 +28,24 @@ def infer(model_path, image_path):
         ])
         img_tensor = transform(img).unsqueeze(0).to(device)
         
-        if "efficientnet_b0_colposcopy" in model_path.lower():
-            pt_model = models.efficientnet_b0(pretrained=False)
+        state_dict = torch.load(model_path, map_location=device)
+        if "efficientnet_b0" in model_path.lower():
+            num_classes = state_dict['classifier.1.3.weight'].shape[0]
+            pt_model = models.efficientnet_b0(weights=None)
             num_ftrs = pt_model.classifier[1].in_features
             pt_model.classifier[1] = nn.Sequential(
                 nn.Linear(num_ftrs, 512),
                 nn.ReLU(),
                 nn.Dropout(0.4),
-                nn.Linear(512, 3)
-            )
-        elif "efficientnet_b0" in model_path.lower():
-            pt_model = models.efficientnet_b0(pretrained=False)
-            num_ftrs = pt_model.classifier[1].in_features
-            pt_model.classifier[1] = nn.Sequential(
-                nn.Linear(num_ftrs, 512),
-                nn.ReLU(),
-                nn.Dropout(0.4),
-                nn.Linear(512, 7)
+                nn.Linear(512, num_classes)
             )
         else:
-            pt_model = models.alexnet(pretrained=False)
+            num_classes = state_dict['classifier.6.weight'].shape[0]
+            pt_model = models.alexnet(weights=None)
             pt_model.classifier[4] = nn.Linear(4096, 1024)
-            pt_model.classifier[6] = nn.Linear(1024, 7)
+            pt_model.classifier[6] = nn.Linear(1024, num_classes)
             
-        pt_model.load_state_dict(torch.load(model_path, map_location=device))
+        pt_model.load_state_dict(state_dict)
         pt_model.to(device)
         pt_model.eval()
         

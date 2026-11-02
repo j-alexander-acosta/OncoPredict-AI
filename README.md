@@ -23,7 +23,7 @@ Este proyecto utiliza una arquitectura de procesamiento triple que combina:
 
 3. **Análisis de Imagen de Citología (Microscopía / Visión por Computadora)**
    - Utiliza *Transfer Learning* y **Fine-Tuning Progresivo** sobre arquitecturas profundas probadas para detectar células anormales en muestras celulares de microscopio.
-   - **Datasets Soportados:** **Herlev** (917 imágenes), **SIPaKMeD** (~4049 imágenes) y **RIVA**, distribuidas en diversas clases morfológicas.
+   - **Datasets Soportados:** **Herlev** (917 imágenes en 7 clases), **SIPaKMeD** (5,015 imágenes: 966 completas + 4,049 recortadas en 5 clases) y **RIVA** (16,841 imágenes: 959 frotis completos + 15,882 células recortadas en 8 categorías Bethesda), distribuidas en diversas clases morfológicas.
    - Agrupa los hallazgos en "Bajo Riesgo" (ej. normal_columnar, superficial) o "Alto Riesgo" (ej. carcinoma_in_situ, dysplastic).
    - **Modelos Integrados:** **EfficientNet-B0 (Recomendado/SOTA)**, MobileNet, InceptionV3, ResNet50 y AlexNet. EfficientNet alcanzó un 94.4% de precisión solucionando el estancamiento morfológico de las redes previas.
    - **Sistema de Explicabilidad (XAI):** Integra **Score-CAM** (mapas de alta resolución sin gradientes), evaluación local **Deletion AUC** (~0.2890) y verificación global **TCAV** (Sensibilidad conceptual 100%), eliminando el efecto "caja negra" y elevando la auditabilidad a grado médico.

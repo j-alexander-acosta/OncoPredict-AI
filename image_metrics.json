@@ -62,32 +62,32 @@
     {
         "dataset": "RIVA",
         "model": "MobileNet",
-        "accuracy": "47.55%",
-        "sensitivity": "47.19%",
-        "specificity": "86.72%",
-        "precision": "68.20%",
-        "f1": "47.31%",
-        "auc_roc": "76.93%"
+        "accuracy": "50.40%",
+        "sensitivity": "38.89%",
+        "specificity": "92.11%",
+        "precision": "45.40%",
+        "f1": "38.06%",
+        "auc_roc": "83.56%"
     },
     {
         "dataset": "RIVA",
         "model": "InceptionV3",
-        "accuracy": "40.66%",
-        "sensitivity": "40.79%",
-        "specificity": "85.09%",
-        "precision": "46.57%",
-        "f1": "41.15%",
-        "auc_roc": "73.82%"
+        "accuracy": "46.99%",
+        "sensitivity": "34.85%",
+        "specificity": "91.58%",
+        "precision": "39.06%",
+        "f1": "33.44%",
+        "auc_roc": "81.16%"
     },
     {
         "dataset": "RIVA",
         "model": "ResNet50",
-        "accuracy": "21.18%",
-        "sensitivity": "20.00%",
-        "specificity": "80.00%",
-        "precision": "4.24%",
-        "f1": "6.99%",
-        "auc_roc": "60.54%"
+        "accuracy": "32.89%",
+        "sensitivity": "15.54%",
+        "specificity": "88.31%",
+        "precision": "19.33%",
+        "f1": "12.28%",
+        "auc_roc": "66.83%"
     },
     {
         "dataset": "Herlev",
@@ -112,12 +112,12 @@
     {
         "dataset": "RIVA",
         "model": "AlexNet",
-        "accuracy": "92.83%",
-        "sensitivity": "93.20%",
-        "specificity": "98.19%",
-        "precision": "93.08%",
-        "f1": "93.13%",
-        "auc_roc": "99.47%"
+        "accuracy": "59.20%",
+        "sensitivity": "50.20%",
+        "specificity": "93.49%",
+        "precision": "53.82%",
+        "f1": "49.80%",
+        "auc_roc": "88.90%"
     },
     {
         "dataset": "Herlev",
@@ -142,12 +142,12 @@
     {
         "dataset": "RIVA",
         "model": "EfficientNet_B0",
-        "accuracy": "93.63%",
-        "sensitivity": "93.93%",
-        "specificity": "98.39%",
-        "precision": "93.84%",
-        "f1": "93.86%",
-        "auc_roc": "99.34%"
+        "accuracy": "57.50%",
+        "sensitivity": "46.96%",
+        "specificity": "93.11%",
+        "precision": "60.44%",
+        "f1": "47.29%",
+        "auc_roc": "87.62%"
     },
     {
         "dataset": "Intel_MobileODT",
