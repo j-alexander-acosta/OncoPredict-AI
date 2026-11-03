@@ -57,8 +57,8 @@ Se eliminaron deliberadamente 3 atributos: `'Hinselmann'`, `'Schiller'` y `'Cito
 * **Separación de Ajuste y Medición:** Se dividió la muestra mediante *hold-out* estratificado (`stratify=y`, `random_state=42`), reservando un **15% exclusivamente para prueba (129 pacientes: 121 sanas y 8 con cáncer)** y un **85% para ajuste y entrenamiento (729 pacientes: 682 sanas y 47 con cáncer)**. La tasa epidemiológica de positivos en prueba es del 6.20% (razón de desbalance de 15.1 a 1).
 * **Sobremuestreo Sintético (SMOTE):** Para mitigar el sesgo hacia la clase mayoritaria sin alterar la distribución de evaluación, se aplicó SMOTE **estrictamente sobre el conjunto de entrenamiento**. Se sintetizaron 635 muestras de la clase minoritaria, equilibrando el ajuste en **1,364 observaciones (682 sanas y 682 con cáncer)**.
 
-### 1.4. Datos de Visión por Computadora (Citología Celular)
-Para las imágenes, se emplearon tres repositorios estándar: **Herlev** (917 imágenes individuales divididas en 7 clases morfológicas), **SIPaKMeD** (4,049 células aisladas en 5 categorías patológicas) y **RIVA** (959 frotis con criterios de Bethesda). Las imágenes fueron redimensionadas a 224x224 píxeles, normalizadas con la media y desviación estándar de ImageNet ($\mu = [0.485, 0.456, 0.406]$, $\sigma = [0.229, 0.224, 0.225]$) y particionadas en 80% entrenamiento y 20% prueba con validación cruzada.
+### 1.4. Datos de Visión por Computadora (Citología Celular y Colposcopía)
+Para las imágenes citológicas microscópicas se emplearon tres repositorios estándar: **Herlev** (917 imágenes individuales divididas en 7 clases morfológicas), **SIPaKMeD** (5,015 imágenes: 966 frotis completos + 4,049 células aisladas en 5 categorías patológicas) y **RIVA** (16,841 imágenes: 959 frotis completos + 15,882 células recortadas en 8 categorías del Sistema Bethesda: `ASCH`, `ASCUS`, `ENDO`, `HSIL`, `INFL`, `LSIL`, `NILM`, `SCC`), complementados con **Intel & MobileODT** para imágenes macroscópicas de colposcopía (clasificación en 3 tipos de Zona de Transformación). Las imágenes fueron redimensionadas a 224x224 píxeles, normalizadas con la media y desviación estándar de ImageNet ($\mu = [0.485, 0.456, 0.406]$, $\sigma = [0.229, 0.224, 0.225]$) y particionadas en 80% entrenamiento y 20% prueba con validación cruzada.
 
 ---
 
@@ -146,25 +146,29 @@ Se formalizó como punto de comparación un **Clasificador Trivial (*Dummy Class
 * **Random Forest:** $\text{TP}=1$, $\text{FP}=3$, $\text{TN}=118$, $\text{FN}=7$.
 * **XGBoost:** $\text{TP}=1$, $\text{FP}=1$, $\text{TN}=120$, $\text{FN}=7$.
 
-### 3.4. Rendimiento de Modelos de Visión por Computadora (Transfer Learning)
+### 3.4. Rendimiento de Modelos de Visión por Computadora (Transfer Learning y Fine-Tuning Progresivo)
 
 ```
-+-----------------+-----------------------+----------+--------------+---------------+-----------+----------+----------+
-| Dataset         | Modelo CNN            | Accuracy | Sensibilidad | Especificidad | Precisión | F1-Score | AUC-ROC  |
-+-----------------+-----------------------+----------+--------------+---------------+-----------+----------+----------+
-| Herlev (7 c.)   | MobileNet             | 42.70%   | 47.86%       | 90.18%        | 50.66%    | 47.76%   | 81.66%   |
-| Herlev (7 c.)   | InceptionV3           | 40.15%   | 43.71%       | 89.61%        | 45.27%    | 43.73%   | 79.34%   |
-| Herlev (7 c.)   | ResNet50              | 16.79%   | 11.34%       | 84.97%        |  4.31%    |  6.11%   | 57.98%   |
-| Herlev (7 c.)   | AlexNet               | 45.26%   | 45.96%       | 90.30%        | 43.30%    | 42.42%   | 80.39%   |
-| SIPaKMeD (5 c.) | MobileNet             | 49.35%   | 49.42%       | 87.19%        | 66.98%    | 49.93%   | 81.29%   |
-| SIPaKMeD (5 c.) | InceptionV3           | 41.86%   | 41.65%       | 85.31%        | 55.46%    | 41.84%   | 73.28%   |
-| SIPaKMeD (5 c.) | ResNet50              | 33.17%   | 33.49%       | 83.14%        | 16.62%    | 20.85%   | 60.33%   |
-| SIPaKMeD (5 c.) | AlexNet               | 93.63%   | 93.99%       | 98.40%        | 93.79%    | 93.76%   | 99.65%   |
-| RIVA (7 cat.)   | MobileNet             | 47.55%   | 47.19%       | 86.72%        | 68.20%    | 47.31%   | 76.93%   |
-| RIVA (7 cat.)   | InceptionV3           | 40.66%   | 40.79%       | 85.09%        | 46.57%    | 41.15%   | 73.82%   |
-| RIVA (7 cat.)   | ResNet50              | 21.18%   | 20.00%       | 80.00%        |  4.24%    |  6.99%   | 60.54%   |
-| RIVA (7 cat.)   | AlexNet               | 92.83%   | 93.20%       | 98.19%        | 93.08%    | 93.13%   | 99.47%   |
-+-----------------+-----------------------+----------+--------------+---------------+-----------+----------+----------+
++-----------------------+-----------------------+----------+--------------+---------------+-----------+----------+----------+
+| Dataset               | Modelo CNN            | Accuracy | Sensibilidad | Especificidad | Precisión | F1-Score | AUC-ROC  |
++-----------------------+-----------------------+----------+--------------+---------------+-----------+----------+----------+
+| Herlev (7 c.)         | MobileNet             | 42.70%   | 47.86%       | 90.18%        | 50.66%    | 47.76%   | 81.66%   |
+| Herlev (7 c.)         | InceptionV3           | 40.15%   | 43.71%       | 89.61%        | 45.27%    | 43.73%   | 79.34%   |
+| Herlev (7 c.)         | ResNet50              | 16.79%   | 11.34%       | 84.97%        |  4.31%    |  6.11%   | 57.98%   |
+| Herlev (7 c.)         | AlexNet               | 45.26%   | 45.96%       | 90.30%        | 43.30%    | 42.42%   | 80.39%   |
+| Herlev (7 c.)         | EfficientNet_B0       | 36.13%   | 41.45%       | 89.23%        | 44.70%    | 39.78%   | 79.31%   |
+| SIPaKMeD (5 c.)       | MobileNet             | 49.35%   | 49.42%       | 87.19%        | 66.98%    | 49.93%   | 81.29%   |
+| SIPaKMeD (5 c.)       | InceptionV3           | 41.86%   | 41.65%       | 85.31%        | 55.46%    | 41.84%   | 73.28%   |
+| SIPaKMeD (5 c.)       | ResNet50              | 33.17%   | 33.49%       | 83.14%        | 16.62%    | 20.85%   | 60.33%   |
+| SIPaKMeD (5 c.)       | AlexNet               | 93.63%   | 93.99%       | 98.40%        | 93.79%    | 93.76%   | 99.65%   |
+| SIPaKMeD (5 c.)       | EfficientNet_B0       | 94.42%   | 94.71%       | 98.60%        | 94.49%    | 94.58%   | 99.39%   |
+| RIVA (8 cat.)         | MobileNet             | 50.40%   | 38.89%       | 92.11%        | 45.40%    | 38.06%   | 83.56%   |
+| RIVA (8 cat.)         | InceptionV3           | 46.99%   | 34.85%       | 91.58%        | 39.06%    | 33.44%   | 81.16%   |
+| RIVA (8 cat.)         | ResNet50              | 32.89%   | 15.54%       | 88.31%        | 19.33%    | 12.28%   | 66.83%   |
+| RIVA (8 cat.)         | AlexNet               | 59.20%   | 50.20%       | 93.49%        | 53.82%    | 49.80%   | 88.90%   |
+| RIVA (8 cat.)         | EfficientNet_B0       | 57.50%   | 46.96%       | 93.11%        | 60.44%    | 47.29%   | 87.62%   |
+| Intel_MobileODT (3 c.)| EfficientNet_B0_Colpo | 64.13%   | 54.77%       | 77.65%        | 62.43%    | 55.62%   | 78.91%   |
++-----------------------+-----------------------+----------+--------------+---------------+-----------+----------+----------+
 ```
 
 ### 3.5. Tabla Resumen de Técnicas de Explicabilidad (XAI) y Validación Post-Hoc
@@ -198,7 +202,7 @@ Se formalizó como punto de comparación un **Clasificador Trivial (*Dummy Class
 
 ### 4.1. Qué Responde lo Obtenido Hasta Ahora
 1. **Separación Latente en Datos Tabulares:** Aunque los modelos tabulares sufren bajo el umbral convencional de 0.50, el valor de **AUC-ROC alcanzado por Random Forest (76.45%) y XGBoost (75.41%)** demuestra que ambos algoritmos ordenan correctamente las probabilidades de riesgo. La explicabilidad global (Figura 1) confirma que esta discriminación responde a factores clínicos epidemiológicos plausibles.
-2. **Capacidad Diagnóstica Sobresaliente de AlexNet:** En citología microscópica, AlexNet no solo superó ampliamente a las demás arquitecturas, sino que alcanzó niveles de precisión cuasi-clínicos: **93.63% de exactitud y 99.65% de AUC-ROC en SIPaKMeD**, y **92.83% de exactitud con 99.47% de AUC-ROC en RIVA**, manteniendo mapas de activación focalizados en núcleos celulares (Figura 2).
+2. **Capacidad Diagnóstica Sobresaliente de EfficientNet-B0 y AlexNet:** En citología microscópica, las arquitecturas en PyTorch con *Fine-Tuning Progresivo* superaron ampliamente a las demás redes: alcanzaron niveles de precisión cuasi-clínicos en **SIPaKMeD** (**94.42% de exactitud y 99.39% de AUC-ROC con EfficientNet-B0**, y **93.63% de exactitud con 99.65% de AUC-ROC en AlexNet**), y lideraron la clasificación multiclase compleja de 8 categorías Bethesda en **RIVA** (**59.20% de exactitud y 88.90% de AUC-ROC en AlexNet**, y **57.50% de exactitud con 60.44% de precisión macro y 87.62% de AUC-ROC en EfficientNet-B0**, frente al azar uniforme de 12.50%), manteniendo mapas de activación focalizados en núcleos celulares (Figura 2). Asimismo, en colposcopía macroscópica (**Intel & MobileODT**), `EfficientNet_B0_Colpo` alcanzó **64.13% de exactitud, 77.65% de especificidad y 78.91% de AUC-ROC**.
 
 ### 4.2. Resultados que Difieren de lo Esperado e Hipótesis Causales
 1. **La Paradoja del Accuracy y la Falla de Sensibilidad en Datos Tabulares:**

@@ -25,7 +25,7 @@ Este proyecto utiliza una arquitectura de procesamiento triple que combina:
    - Utiliza *Transfer Learning* y **Fine-Tuning Progresivo** sobre arquitecturas profundas probadas para detectar células anormales en muestras celulares de microscopio.
    - **Datasets Soportados:** **Herlev** (917 imágenes en 7 clases), **SIPaKMeD** (5,015 imágenes: 966 completas + 4,049 recortadas en 5 clases) y **RIVA** (16,841 imágenes: 959 frotis completos + 15,882 células recortadas en 8 categorías Bethesda), distribuidas en diversas clases morfológicas.
    - Agrupa los hallazgos en "Bajo Riesgo" (ej. normal_columnar, superficial) o "Alto Riesgo" (ej. carcinoma_in_situ, dysplastic).
-   - **Modelos Integrados:** **EfficientNet-B0 (Recomendado/SOTA)**, MobileNet, InceptionV3, ResNet50 y AlexNet. EfficientNet alcanzó un 94.4% de precisión solucionando el estancamiento morfológico de las redes previas.
+   - **Modelos Integrados:** **EfficientNet-B0 (Recomendado/SOTA)**, MobileNet, InceptionV3, ResNet50 y AlexNet. `EfficientNet-B0` alcanzó un **94.42%** de exactitud (AUC-ROC **99.39%**) en SIPaKMeD y `AlexNet` un **93.63%** (AUC-ROC **99.65%**), mientras que en el dataset RIVA de 8 categorías Bethesda alcanzaron **59.20%** (`AlexNet`, AUC-ROC **88.90%**) y **57.50%** (`EfficientNet-B0`, Precisión **60.44%**, AUC-ROC **87.62%**), solucionando el estancamiento morfológico de las redes previas.
    - **Sistema de Explicabilidad (XAI):** Integra **Score-CAM** (mapas de alta resolución sin gradientes), evaluación local **Deletion AUC** (~0.2890) y verificación global **TCAV** (Sensibilidad conceptual 100%), eliminando el efecto "caja negra" y elevando la auditabilidad a grado médico.
    - Cuenta con soporte de aceleración gráfica **MPS (Apple Silicon)** para entrenamientos locales en Mac.
 
@@ -36,7 +36,41 @@ Este proyecto utiliza una arquitectura de procesamiento triple que combina:
      - **Tipo 1:** Unión escamocolumnar completamente visible (Bajo riesgo).
      - **Tipo 2:** Unión parcialmente visible (Riesgo moderado).
      - **Tipo 3:** Unión no visible, ubicada en el canal endocervical (Alto riesgo de lesiones ocultas).
-   - **Modelo Integrado:** **EfficientNet-B0**, adaptado mediante fine-tuning progresivo y modificado en su última capa para inferir entre las 3 clases anatómicas.
+   - **Modelo Integrado:** **EfficientNet-B0** (`EfficientNet_B0_Colpo`), adaptado mediante fine-tuning progresivo y modificado en su última capa para inferir entre las 3 clases anatómicas (Exactitud **64.13%**, Especificidad **77.65%**, Precisión **62.43%**, AUC-ROC **78.91%**).
+
+## Resumen de Resultados Consolidados (Benchmark)
+
+### A. Modelos Tabulares Clínicos (Dataset UCI - 15% Prueba Estratificada, n=129)
+
+| Modelo | Accuracy | Sensibilidad | Especificidad | Precisión | F1-Score | AUC-ROC | TP | FP | TN | FN |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Baseline (Dummy Trivial)** | 93.80% | 0.00% | 100.00% | 0.00% | 0.00% | 50.00% | 0 | 0 | 121 | 8 |
+| **Regresión Logística** | 79.84% | 12.50% | 84.30% | 5.00% | 7.14% | 50.93% | 1 | 19 | 102 | 7 |
+| **SVM** | 89.15% | 0.00% | 95.04% | 0.00% | 0.00% | 65.60% | 0 | 6 | 115 | 8 |
+| **Decision Tree** | 87.60% | 25.00% | 91.74% | 16.67% | 20.00% | 58.06% | 2 | 10 | 111 | 6 |
+| **Random Forest** | 92.25% | 12.50% | 97.52% | 25.00% | 16.67% | **76.45%** | 1 | 3 | 118 | 7 |
+| **XGBoost** | **93.80%** | 12.50% | **99.17%** | **50.00%** | **20.00%** | 75.41% | 1 | 1 | 120 | 7 |
+
+### B. Modelos de Visión por Computadora (Citología y Colposcopía)
+
+| Dataset | Modelo CNN | Accuracy | Sensibilidad | Especificidad | Precisión | F1-Score | AUC-ROC |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Herlev (7 clases)** | MobileNet | 42.70% | **47.86%** | 90.18% | **50.66%** | **47.76%** | **81.66%** |
+| **Herlev (7 clases)** | InceptionV3 | 40.15% | 43.71% | 89.61% | 45.27% | 43.73% | 79.34% |
+| **Herlev (7 clases)** | ResNet50 | 16.79% | 11.34% | 84.97% | 4.31% | 6.11% | 57.98% |
+| **Herlev (7 clases)** | AlexNet | **45.26%** | 45.96% | **90.30%** | 43.30% | 42.42% | 80.39% |
+| **Herlev (7 clases)** | EfficientNet_B0 | 36.13% | 41.45% | 89.23% | 44.70% | 39.78% | 79.31% |
+| **SIPaKMeD (5 clases)** | MobileNet | 49.35% | 49.42% | 87.19% | 66.98% | 49.93% | 81.29% |
+| **SIPaKMeD (5 clases)** | InceptionV3 | 41.86% | 41.65% | 85.31% | 55.46% | 41.84% | 73.28% |
+| **SIPaKMeD (5 clases)** | ResNet50 | 33.17% | 33.49% | 83.14% | 16.62% | 20.85% | 60.33% |
+| **SIPaKMeD (5 clases)** | AlexNet | 93.63% | 93.99% | 98.40% | 93.79% | 93.76% | **99.65%** |
+| **SIPaKMeD (5 clases)** | EfficientNet_B0 | **94.42%** | **94.71%** | **98.60%** | **94.49%** | **94.58%** | 99.39% |
+| **RIVA (8 cat. Bethesda)** | MobileNet | 50.40% | 38.89% | 92.11% | 45.40% | 38.06% | 83.56% |
+| **RIVA (8 cat. Bethesda)** | InceptionV3 | 46.99% | 34.85% | 91.58% | 39.06% | 33.44% | 81.16% |
+| **RIVA (8 cat. Bethesda)** | ResNet50 | 32.89% | 15.54% | 88.31% | 19.33% | 12.28% | 66.83% |
+| **RIVA (8 cat. Bethesda)** | AlexNet | **59.20%** | **50.20%** | **93.49%** | 53.82% | **49.80%** | **88.90%** |
+| **RIVA (8 cat. Bethesda)** | EfficientNet_B0 | 57.50% | 46.96% | 93.11% | **60.44%** | 47.29% | 87.62% |
+| **Intel_MobileODT (3 c.)** | EfficientNet_B0_Colpo | **64.13%** | **54.77%** | **77.65%** | **62.43%** | **55.62%** | **78.91%** |
 
 ## Datasets Utilizados
 

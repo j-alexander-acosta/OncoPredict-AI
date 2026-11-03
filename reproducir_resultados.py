@@ -278,9 +278,10 @@ def phase_3_evaluate_images(json_path):
     print("\n[*] Puntos de comparación teóricos (Azar Uniforme):")
     print("    - Herlev (7 clases):    14.28% de exactitud esperada por azar.")
     print("    - SIPaKMeD (5 clases):  20.00% de exactitud esperada por azar.")
-    print("    - RIVA (7 categorías):  14.28% de exactitud esperada por azar.")
+    print("    - RIVA (8 categorías):  12.50% de exactitud esperada por azar.")
     print("    -> ResNet50 en Herlev (16.79%) opera prácticamente a nivel de azar.")
-    print("    -> AlexNet en SIPaKMeD (93.63%) y RIVA (92.83%) supera por más de 70 puntos porcentuales el baseline.")
+    print("    -> EfficientNet-B0 (94.42%) y AlexNet (93.63%) en SIPaKMeD superan por más de 73 puntos porcentuales el baseline.")
+    print("    -> AlexNet (59.20%) y EfficientNet-B0 (57.50%) en RIVA cuadruplican la exactitud del azar uniforme en 8 clases.")
     
     return df_img
 

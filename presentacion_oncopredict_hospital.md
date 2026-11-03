@@ -42,30 +42,31 @@
 ### **Diapositiva 4: Fase 1 - Inferencia Clínica (Datos Tabulares)**
 
 **Texto visible (Bullet points):**
-* **Dataset:** UCI Cervical Cancer Risk Factors (858 pacientes, 36 atributos médicos/conductuales).
+* **Dataset:** UCI Cervical Cancer Risk Factors (858 pacientes, 36 atributos médicos/conductuales; 32 predictores tras exclusión por *data leakage*).
 * **Modelos Evaluados:** Regresión Logística, SVM, Árboles de Decisión, Random Forest, XGBoost.
 * **Técnicas de Optimización:** Scikit-learn, Pandas, SMOTE para balanceo de clases.
 * **Hallazgos Clave:** 
-    * XGBoost logra ~93.8% de exactitud (métrica engañosa por desbalance).
-    * Importancia crítica del ajuste del umbral clínico (*threshold*) para maximizar la sensibilidad y detectar verdaderos positivos.
+    * XGBoost logra **93.80%** de exactitud (AUC-ROC **75.41%**, Precisión **50.00%**, Especificidad **99.17%**) y Random Forest logra **92.25%** de exactitud (AUC-ROC **76.45%**).
+    * Importancia crítica del ajuste del umbral clínico (*threshold*) para maximizar la sensibilidad (actualmente 12.50% - 25.00% bajo umbral estándar) y detectar verdaderos positivos.
 
 **Notas del orador (Guion detallado):**
-> "En nuestra primera fase, analizamos datos tabulares utilizando el dataset de la UCI con 858 pacientes y 36 atributos. Evaluamos varios algoritmos robustos y, aunque modelos como XGBoost alcanzaron una exactitud aparente del 93.8%, el análisis profundo reveló que esta métrica es engañosa debido al desbalance natural de los datos clínicos. Lo verdaderamente importante aquí es la sensibilidad. A través de técnicas como SMOTE y el ajuste dinámico del umbral clínico (*threshold*), logramos reconfigurar el modelo para que priorice la detección de los verdaderos positivos. En oncología, un falso negativo es inaceptable, y nuestras herramientas de explicabilidad nos permitieron ajustar el algoritmo precisamente para este requerimiento médico."
+> "En nuestra primera fase, analizamos datos tabulares utilizando el dataset de la UCI con 858 pacientes y 36 atributos. Evaluamos varios algoritmos robustos y, aunque modelos como XGBoost alcanzaron una exactitud aparente del 93.80% (con un AUC-ROC de 75.41%) y Random Forest un 92.25% (con un AUC-ROC de 76.45%), el análisis profundo reveló que la exactitud global es engañosa debido al desbalance natural de los datos clínicos. Lo verdaderamente importante aquí es la sensibilidad. A través de técnicas como SMOTE y el ajuste dinámico del umbral clínico (*threshold*), logramos reconfigurar el modelo para que priorice la detección de los verdaderos positivos. En oncología, un falso negativo es inaceptable, y nuestras herramientas de explicabilidad (como TreeSHAP, donde los 5 principales factores concentran el 75.62% del impacto en log-odds) nos permitieron auditar y ajustar el algoritmo precisamente para este requerimiento médico."
 
 ---
 
 ### **Diapositiva 5: Fase 2 - Análisis Microscópico (Citología Digital)**
 
 **Texto visible (Bullet points):**
-* **Datasets:** SIPaKMeD (~21,200 img), RIVA (~21,200 img), Herlev (~900 img). *Aviso: Actualmente no existe un dataset chileno para imágenes microscópicas.*
+* **Datasets:** SIPaKMeD (5,015 img en 5 clases), RIVA (16,841 img en 8 categorías Bethesda), Herlev (917 img en 7 clases). *Aviso: Actualmente no existe un dataset chileno para imágenes microscópicas.*
 * **Infraestructura:** PyTorch con aceleración nativa MPS (Apple Silicon).
-* **Innovación Tecnológica (SOTA):** Superación del "estancamiento morfológico" mediante **EfficientNet-B0** y estrategias de **Fine-Tuning Progresivo** (descongelamiento dinámico).
+* **Innovación Tecnológica (SOTA):** Superación del "estancamiento morfológico" mediante **EfficientNet-B0**, **AlexNet** y estrategias de **Fine-Tuning Progresivo** (descongelamiento dinámico).
 * **Resultados Campeones:** 
-    * SIPaKMeD: Exactitud **94.42%** | AUC-ROC **99.39%**
-    * RIVA: Exactitud **93.63%**
+    * **SIPaKMeD:** Exactitud **94.42%** | AUC-ROC **99.39%** (`EfficientNet-B0`) y Exactitud **93.63%** | AUC-ROC **99.65%** (`AlexNet`).
+    * **RIVA (8 clases Bethesda):** Exactitud **59.20%** | AUC-ROC **88.90%** (`AlexNet`) y Exactitud **57.50%** | Precisión **60.44%** | AUC-ROC **87.62%** (`EfficientNet-B0`), frente al 12.50% de azar uniforme.
+    * **Herlev (7 clases):** Exactitud **45.26%** | AUC-ROC **80.39%** (`AlexNet`) y Exactitud **42.70%** | AUC-ROC **81.66%** (`MobileNet`).
 
 **Notas del orador (Guion detallado):**
-> "Pasando a la fase celular, entrenamos nuestros modelos con más de 40.000 imágenes citológicas. Históricamente, arquitecturas previas sufrían de 'estancamiento morfológico celular', siendo incapaces de diferenciar anomalías sutiles. Resolvimos este problema adoptando la arquitectura de estado del arte, EfficientNet-B0, impulsada en PyTorch. Pero el verdadero salto de calidad se logró implementando una técnica de *Fine-Tuning* Progresivo, descongelando dinámicamente los bloques convolucionales de la red. Los resultados son sobresalientes: alcanzamos una exactitud del 94.42% y un AUC-ROC casi perfecto del 99.39% en el dataset SIPaKMeD. Estas métricas demuestran una capacidad de generalización excepcional. Sin embargo, es vital destacar un punto crítico: a pesar del volumen de datos, **ninguno de estos datasets microscópicos es chileno**. Esta carencia refuerza nuestra necesidad urgente de generar datos locales a nivel de nuestro país, algo que da pie y fundamenta la propuesta colaborativa que les presentaremos."
+> "Pasando a la fase celular, entrenamos nuestros modelos con más de 22.700 imágenes citológicas. Históricamente, arquitecturas previas sufrían de 'estancamiento morfológico celular', siendo incapaces de diferenciar anomalías sutiles. Resolvimos este problema adoptando arquitecturas en PyTorch como EfficientNet-B0 y AlexNet con *Fine-Tuning* Progresivo, descongelando dinámicamente los bloques convolucionales de la red. Los resultados son sobresalientes: alcanzamos una exactitud del 94.42% con un AUC-ROC del 99.39% (en EfficientNet-B0) y 93.63% con un AUC-ROC del 99.65% (en AlexNet) sobre el dataset SIPaKMeD; y en el complejo dataset RIVA de 8 categorías del Sistema Bethesda logramos un 59.20% de exactitud con 88.90% de AUC-ROC (en AlexNet) y una precisión macro del 60.44% con 87.62% de AUC-ROC (en EfficientNet-B0). Estas métricas demuestran una capacidad de generalización excepcional. Sin embargo, es vital destacar un punto crítico: a pesar del volumen de datos, **ninguno de estos datasets microscópicos es chileno**. Esta carencia refuerza nuestra necesidad urgente de generar datos locales a nivel de nuestro país, algo que da pie y fundamenta la propuesta colaborativa que les presentaremos."
 
 ---
 
@@ -74,7 +75,7 @@
 **Texto visible (Bullet points):**
 * **Dataset Base:** Intel & MobileODT Cervical Cancer Screening.
 * **Objetivo Clínico:** Clasificación anatómica de la Zona de Transformación in-vivo (Tipos 1, 2 y 3).
-* **Arquitectura:** EfficientNet-B0 adaptado para imágenes colposcópicas.
+* **Arquitectura y Rendimiento:** `EfficientNet-B0` adaptado para imágenes colposcópicas (**Exactitud: 64.13%** | **Especificidad: 77.65%** | **Precisión: 62.43%** | **AUC-ROC: 78.91%**).
 * **El Puente:** Cerrando la brecha entre el laboratorio de patología y el box de atención ginecológica.
 
 **Notas del orador (Guion detallado):**
